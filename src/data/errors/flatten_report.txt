@@ -1,0 +1,55 @@
+Flatten run 2025-07-12T19:08:07.645238
+------------------------------------------------------------
+[3930158]  OK    Flattened 3373 rows
+[3930159]  OK    Flattened 3356 rows
+[3930160]  OK    Flattened 3796 rows
+[3930161]  OK    Flattened 4066 rows
+[3930162]  OK    Flattened 3509 rows
+[3930163]  OK    Flattened 3920 rows
+[3930164]  OK    Flattened 3543 rows
+[3930165]  OK    Flattened 3718 rows
+[3930166]  OK    Flattened 3602 rows
+[3930167]  OK    Flattened 3721 rows
+[3930168]  OK    Flattened 3880 rows
+[3930169]  OK    Flattened 3125 rows
+[3930170]  OK    Flattened 3552 rows
+[3930171]  OK    Flattened 3881 rows
+[3930172]  OK    Flattened 3982 rows
+[3930173]  OK    Flattened 3681 rows
+[3930174]  OK    Flattened 3786 rows
+[3930175]  OK    Flattened 3200 rows
+[3930176]  OK    Flattened 3724 rows
+[3930177]  OK    Flattened 3386 rows
+[3930178]  OK    Flattened 4006 rows
+[3930179]  OK    Flattened 3776 rows
+[3930180]  OK    Flattened 3198 rows
+[3930181]  OK    Flattened 3688 rows
+[3930182]  OK    Flattened 3787 rows
+[3930183]  OK    Flattened 2886 rows
+[3930184]  OK    Flattened 2953 rows
+[3938637]  OK    Flattened 3401 rows
+[3938638]  OK    Flattened 3169 rows
+[3938639]  OK    Flattened 3837 rows
+[3938640]  OK    Flattened 3512 rows
+[3938641]  OK    Flattened 3400 rows
+[3938642]  OK    Flattened 3332 rows
+[3938643]  OK    Flattened 3767 rows
+[3938644]  OK    Flattened 3659 rows
+[3938645]  OK    Flattened 3525 rows
+[3940878]  OK    Flattened 3853 rows
+[3940983]  OK    Flattened 3640 rows
+[3941017]  OK    Flattened 4764 rows
+[3941018]  OK    Flattened 3949 rows
+[3941019]  OK    Flattened 3941 rows
+[3941020]  OK    Flattened 4221 rows
+[3941021]  OK    Flattened 2996 rows
+[3941022]  OK    Flattened 3722 rows
+[3942226]  OK    Flattened 4463 rows
+[3942227]  OK    Flattened 4882 rows
+[3942349]  OK    Flattened 5190 rows
+[3942382]  OK    Flattened 3415 rows
+[3942752]  OK    Flattened 3328 rows
+[3942819]  OK    Flattened 3485 rows
+[3943043]  OK    Flattened 3312 rows
+------------------------------------------------------------
+Success: 51   Failures: 0
