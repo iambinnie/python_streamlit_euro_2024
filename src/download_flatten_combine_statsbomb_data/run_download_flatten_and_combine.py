@@ -1,22 +1,24 @@
 # === File: run_download_flatten_and_combine.py ===
 
 """
-Orchestrates the full StatsBomb data ETL pipeline...
+Orchestrates the full StatsBomb data ETL pipeline:
+- Create required directories
+- Download raw data (if not already downloaded)
+- Remove any non-raw data (cleans out bad intermediate states)
+- Flatten all raw JSON event files into a combined CSV
+- Combine individual CSVs into a single CSV for analysis
 """
 
 import os
 import sys
 
-# 🔧 Force project root into sys.path (not just src/)
+# Force project root (the parent of "src/") to the FRONT of sys.path
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, "..", ".."))
-sys.path.insert(0, PROJECT_ROOT)
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
-# 🔍 (optional) print to confirm
-print("PYTHONPATH entries:")
-for p in sys.path:
-    print("-", p)
-
+# Correct import path
 from src.download_flatten_combine_statsbomb_data import (
     create_directories_if_not_exists,
     download_statsbomb_data_if_not_exists,
@@ -24,8 +26,6 @@ from src.download_flatten_combine_statsbomb_data import (
     flatten_statsbomb_events,
     combine_flattened_event_csvs,
 )
-
-from config.constants import COMP_ID, SEASON_ID
 
 
 def run(
@@ -35,23 +35,14 @@ def run(
     flatten_data: bool = True,
     combine_data: bool = True,
 ):
-    """
-    Runs the full StatsBomb data pipeline with optional steps.
-
-    Parameters:
-        create_dirs (bool): Create required data folders if missing
-        download_data (bool): Download raw JSON files (if not already present)
-        clear_non_raw (bool): Delete any non-raw data (e.g. partial outputs)
-        flatten_data (bool): Flatten raw event JSONs to CSV format
-        combine_data (bool): Combine individual match CSVs into a single DataFrame
-    """
+    """Runs the full StatsBomb data pipeline with optional steps."""
     if create_dirs:
         print("Step 1: Creating required directories...")
         create_directories_if_not_exists.run()
 
     if download_data:
         print("Step 2: Downloading raw data (if not already downloaded)...")
-        download_statsbomb_data_if_not_exists.run(COMP_ID, SEASON_ID)
+        download_statsbomb_data_if_not_exists.run()
 
     if clear_non_raw:
         print("Step 3: Cleaning any non-raw data from previous runs...")

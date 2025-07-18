@@ -1,9 +1,32 @@
-from pydantic import BaseModel
+"""
+Defines core event models for StatsBomb data, including PassEvent and ShotEvent.
+
+- PassEvent: Includes logic for determining completion and arrow coloring.
+- ShotEvent: Includes xG scaling, outcome-based coloring, and goal-view support.
+"""
+
 from typing import Optional
-import pandas as pd
-from src.events.pitch_config import PitchViewMode
+from pydantic import BaseModel
+from enum import Enum
 
 
+# ----------------------------------------------------------------------
+# Pitch view modes
+# ----------------------------------------------------------------------
+class PitchViewMode(Enum):
+    FULL = "full"
+    HALF = "half"
+    GOAL = "goal"
+
+    def use_half_pitch(self) -> bool:
+        """Return True if the half-pitch should be used."""
+        return self in {PitchViewMode.HALF, PitchViewMode.GOAL}
+        #return self in {PitchViewMode.HALF}
+
+
+# ----------------------------------------------------------------------
+# Base event model
+# ----------------------------------------------------------------------
 class BaseEvent(BaseModel):
     id: str
     index: int
@@ -18,75 +41,88 @@ class BaseEvent(BaseModel):
     match_name: str
     x: Optional[float]
     y: Optional[float]
-
-    @staticmethod
-    def safe_str(val):
-        """Convert NaN or float('nan') to None; otherwise return as-is."""
-        try:
-            if val is None:
-                return None
-            if isinstance(val, float) and pd.isna(val):
-                return None
-            return val
-        except Exception:
-            return None
-
-
-class PassEvent(BaseEvent):
-    end_x: Optional[float]
-    end_y: Optional[float]
-    outcome: Optional[str] = None           # from "pass_outcome"
-    length: Optional[float] = None          # from "pass_length"
-    angle: Optional[float] = None           # from "pass_angle"
-    recipient: Optional[str] = None         # from "pass_recipient"
-    height: Optional[str] = None            # from "pass_height"
-
     pitch_view: PitchViewMode = PitchViewMode.FULL
 
-    def is_completed(self) -> bool:
-        return self.outcome is None
+    @staticmethod
+    def safe_str(val) -> str:
+        """Safe string conversion for None values."""
+        return str(val) if val is not None else "-"
 
-    def to_arrow_coords(self) -> Optional[tuple[float, float, float, float]]:
-        if None in (self.x, self.y, self.end_x, self.end_y):
-            return None
-        return (self.x, self.y, self.end_x, self.end_y)
-
-
-class ShotEvent(BaseEvent):
-    shot_outcome: Optional[str] = None           # e.g., "Goal", "Off T", "Saved", "Blocked"
-    shot_xg: Optional[float] = None              # Expected goals value
-    shot_end_x: Optional[float] = None
-    shot_end_y: Optional[float] = None
-
-    pitch_view: PitchViewMode = PitchViewMode.HALF
-
-    def get_color(self) -> str:
-        """Map outcome to display color."""
-        if not self.shot_outcome:
-            return "white"
-        outcome = self.shot_outcome.lower()
-        if "goal" in outcome or "on t" in outcome:
-            return "green"
-        elif "off" in outcome:
-            return "red"
-        elif "block" in outcome:
-            return "blue"
-        elif "save" in outcome:
-            return "orange"
-        return "gray"
-
-    def get_radius(self) -> float:
-        """Scale xG to dot size."""
-        if self.shot_xg is None:
-            return 200
-        return max(100, self.shot_xg * 1000)
-
-    def get_location(self, use_end=False) -> Optional[tuple[float, float]]:
-        if use_end:
-            if self.shot_end_x is not None and self.shot_end_y is not None and not any(
-                    pd.isna([self.shot_end_x, self.shot_end_y])):
-                return self.shot_end_x, self.shot_end_y
-        if self.x is not None and self.y is not None and not any(pd.isna([self.x, self.y])):
+    def get_location(self, use_end: bool = False) -> Optional[tuple]:
+        """Return (x, y) for plotting, switching to end coords if requested."""
+        if use_end and self.end_x is not None and self.end_y is not None:
+            return self.end_x, self.end_y
+        if self.x is not None and self.y is not None:
             return self.x, self.y
         return None
 
+
+# ----------------------------------------------------------------------
+# PassEvent
+# ----------------------------------------------------------------------
+class PassEvent(BaseEvent):
+    pass_outcome: Optional[str] = None
+    pass_end_x: Optional[float] = None
+    pass_end_y: Optional[float] = None
+
+    def is_completed(self) -> bool:
+        """Return True if the pass is completed (no outcome or specific outcome)."""
+        return self.pass_outcome is None or self.pass_outcome.lower() == "complete"
+
+    def get_color(self) -> str:
+        """Return color based on pass completion."""
+        return "green" if self.is_completed() else "red"
+
+
+# ----------------------------------------------------------------------
+# ShotEvent
+# ----------------------------------------------------------------------
+
+OUTCOME_COLOR_MAP = {
+    "goal": "gold",
+    "saved": "orange",
+    "saved to post": "orange",
+    "saved to woodwork": "orange",
+    "off t": "red",          # "off target" variants
+    "post": "blue",          # includes "hit the post"/"off the post"
+    "bar": "blue",           # includes "crossbar"
+    "blocked": "blue",
+    "deflected": "blue",
+    "other": "gray",         # catch-all for unusual categories
+}
+
+class ShotEvent(BaseEvent):
+    shot_xg: float
+    shot_outcome: Optional[str] = None
+    shot_end_x: Optional[float] = None
+    shot_end_y: Optional[float] = None
+    shot_end_z: Optional[float] = None
+    pitch_view: PitchViewMode = PitchViewMode.HALF
+
+    def get_radius(self) -> float:
+        """Scale dot size based on xG (0–1)."""
+        return max(30, self.shot_xg * 300)
+
+    def get_color(self) -> str:
+        """Map shot outcome to standardized color groups."""
+        if not self.shot_outcome:
+            return "gray"
+        key = self.shot_outcome.lower()
+        for outcome_key, color in OUTCOME_COLOR_MAP.items():
+            if outcome_key in key:
+                return color
+        return "gray"  # fallback for unknown outcomes
+
+    def get_location(self, use_end: bool = False) -> Optional[tuple]:
+        """Return start or end shot location (x, y)."""
+        if use_end and self.shot_end_x is not None and self.shot_end_y is not None:
+            return self.shot_end_x, self.shot_end_y
+        return super().get_location(use_end=False)
+
+    def get_goal_coordinates(self):
+        """Returns normalized goal-view coordinates if available."""
+        if self.shot_end_y is None:
+            return None
+        gx = (self.shot_end_y - 36) / 8 * 7.32
+        gy = self.shot_end_z if self.shot_end_z is not None else 0
+        return gx, gy

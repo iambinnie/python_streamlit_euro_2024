@@ -1,42 +1,32 @@
-# === File: download_and_flatten_statsbomb_data/combine_flattened_event_csvs.py ===
+# === File: src/download_flatten_combine_statsbomb_data/combine_flattened_event_csvs.py ===
 
 """
-Combines all per-match flattened event CSVs into a single master file.
-- Reads from FLATTENED_DIR (e.g. data/flattened/)
-- Writes to euro24_all_events_combined.csv in BASE_DATA_DIR
+Combines all match-level flattened event CSVs into a single CSV for analysis.
+Final output saved as 'euro24_all_events_combined.csv' in the data directory.
 """
 
 import os
 import pandas as pd
-from src.config.constants import FLATTENED_DIR, BASE_DATA_DIR
+from glob import glob
 
-COMBINED_PATH = os.path.join(BASE_DATA_DIR, "euro24_all_events_combined.csv")
+from src.config.constants import FLATTENED_DIR, BASE_DATA_DIR
 
 
 def run():
-    """Combines all match-level event CSVs into one combined CSV."""
-    if not os.path.exists(FLATTENED_DIR):
-        print(f"Directory not found: {FLATTENED_DIR}")
-        return
-
-    csv_files = [f for f in os.listdir(FLATTENED_DIR) if f.endswith(".csv")]
-    if not csv_files:
+    """Combines all match-level CSVs in FLATTENED_DIR into one CSV."""
+    csv_paths = sorted(glob(os.path.join(FLATTENED_DIR, "*.csv")))
+    if not csv_paths:
         print(f"No CSV files found in {FLATTENED_DIR}. Nothing to combine.")
         return
 
-    all_events = []
-    for f in csv_files:
-        full_path = os.path.join(FLATTENED_DIR, f)
-        df = pd.read_csv(full_path)
+    combined_df = pd.concat([pd.read_csv(path) for path in csv_paths], ignore_index=True)
 
-        # Optionally inject filename-based match name if not present
-        if "match_name" not in df.columns:
-            df["match_name"] = f.replace(".csv", "")
+    output_csv = os.path.join(BASE_DATA_DIR, "euro24_all_events_combined.csv")
+    combined_df.to_csv(output_csv, index=False)
 
-        all_events.append(df)
+    print(f"[DONE] Combined {len(csv_paths)} CSVs → {output_csv}")
+    print(f"Total rows combined: {len(combined_df):,}")
 
-    combined_df = pd.concat(all_events, ignore_index=True)
-    combined_df.to_csv(COMBINED_PATH, index=False)
 
-    print(f"Combined {len(csv_files)} event files into: {COMBINED_PATH}")
-    print(f"Total events written: {len(combined_df)}")
+if __name__ == "__main__":
+    run()

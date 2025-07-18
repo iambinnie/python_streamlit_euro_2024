@@ -1,0 +1,275 @@
+Flatten run 2025-07-15T18:57:57.971305
+------------------------------------------------------------
+[3930158]  FAIL  1772 Pass/Carry rows missing end coords
+[3930159]  FAIL  1698 Pass/Carry rows missing end coords
+[3930160]  FAIL  1892 Pass/Carry rows missing end coords
+[3930161]  FAIL  2351 Pass/Carry rows missing end coords
+[3930162]  FAIL  1770 Pass/Carry rows missing end coords
+[3930163]  FAIL  2113 Pass/Carry rows missing end coords
+[3930164]  FAIL  1811 Pass/Carry rows missing end coords
+[3930165]  FAIL  1828 Pass/Carry rows missing end coords
+[3930166]  FAIL  1854 Pass/Carry rows missing end coords
+[3930167]  FAIL  1898 Pass/Carry rows missing end coords
+[3930168]  FAIL  2050 Pass/Carry rows missing end coords
+[3930169]  FAIL  1521 Pass/Carry rows missing end coords
+[3930170]  FAIL  1824 Pass/Carry rows missing end coords
+[3930171]  FAIL  2094 Pass/Carry rows missing end coords
+[3930172]  FAIL  2042 Pass/Carry rows missing end coords
+[3930173]  FAIL  2063 Pass/Carry rows missing end coords
+[3930174]  FAIL  1960 Pass/Carry rows missing end coords
+[3930175]  FAIL  1581 Pass/Carry rows missing end coords
+[3930176]  FAIL  1937 Pass/Carry rows missing end coords
+[3930177]  FAIL  1637 Pass/Carry rows missing end coords
+[3930178]  FAIL  2130 Pass/Carry rows missing end coords
+[3930179]  FAIL  1982 Pass/Carry rows missing end coords
+[3930180]  FAIL  1610 Pass/Carry rows missing end coords
+[3930181]  FAIL  1987 Pass/Carry rows missing end coords
+[3930182]  FAIL  2052 Pass/Carry rows missing end coords
+[3930183]  FAIL  1476 Pass/Carry rows missing end coords
+[3930184]  FAIL  1466 Pass/Carry rows missing end coords
+[3938637]  FAIL  1764 Pass/Carry rows missing end coords
+[3938638]  FAIL  1667 Pass/Carry rows missing end coords
+[3938639]  FAIL  2011 Pass/Carry rows missing end coords
+[3938640]  FAIL  1920 Pass/Carry rows missing end coords
+[3938641]  FAIL  1672 Pass/Carry rows missing end coords
+[3938642]  FAIL  1674 Pass/Carry rows missing end coords
+[3938643]  FAIL  1931 Pass/Carry rows missing end coords
+[3938644]  FAIL  1938 Pass/Carry rows missing end coords
+[3938645]  FAIL  1854 Pass/Carry rows missing end coords
+[3940878]  FAIL  2038 Pass/Carry rows missing end coords
+[3940983]  FAIL  1914 Pass/Carry rows missing end coords
+[3941017]  FAIL  2510 Pass/Carry rows missing end coords
+[3941018]  FAIL  2079 Pass/Carry rows missing end coords
+[3941019]  FAIL  2165 Pass/Carry rows missing end coords
+[3941020]  FAIL  2128 Pass/Carry rows missing end coords
+[3941021]  FAIL  1521 Pass/Carry rows missing end coords
+[3941022]  FAIL  1854 Pass/Carry rows missing end coords
+[3942226]  FAIL  2322 Pass/Carry rows missing end coords
+[3942227]  FAIL  2661 Pass/Carry rows missing end coords
+[3942349]  FAIL  2868 Pass/Carry rows missing end coords
+[3942382]  FAIL  1775 Pass/Carry rows missing end coords
+[3942752]  FAIL  1713 Pass/Carry rows missing end coords
+[3942819]  FAIL  1975 Pass/Carry rows missing end coords
+[3943043]  FAIL  1676 Pass/Carry rows missing end coords
+------------------------------------------------------------
+Success: 0   Failures: 51
+Flatten run 2025-07-15T19:01:38.851571
+------------------------------------------------------------
+[3930158]  WARN  1772 Pass/Carry rows missing end coords
+[3930159]  WARN  1698 Pass/Carry rows missing end coords
+[3930160]  WARN  1892 Pass/Carry rows missing end coords
+[3930161]  WARN  2351 Pass/Carry rows missing end coords
+[3930162]  WARN  1770 Pass/Carry rows missing end coords
+[3930163]  WARN  2113 Pass/Carry rows missing end coords
+[3930164]  WARN  1811 Pass/Carry rows missing end coords
+[3930165]  WARN  1828 Pass/Carry rows missing end coords
+[3930166]  WARN  1854 Pass/Carry rows missing end coords
+[3930167]  WARN  1898 Pass/Carry rows missing end coords
+[3930168]  WARN  2050 Pass/Carry rows missing end coords
+[3930169]  WARN  1521 Pass/Carry rows missing end coords
+[3930170]  WARN  1824 Pass/Carry rows missing end coords
+[3930171]  WARN  2094 Pass/Carry rows missing end coords
+[3930172]  WARN  2042 Pass/Carry rows missing end coords
+[3930173]  WARN  2063 Pass/Carry rows missing end coords
+[3930174]  WARN  1960 Pass/Carry rows missing end coords
+[3930175]  WARN  1581 Pass/Carry rows missing end coords
+[3930176]  WARN  1937 Pass/Carry rows missing end coords
+[3930177]  WARN  1637 Pass/Carry rows missing end coords
+[3930178]  WARN  2130 Pass/Carry rows missing end coords
+[3930179]  WARN  1982 Pass/Carry rows missing end coords
+[3930180]  WARN  1610 Pass/Carry rows missing end coords
+[3930181]  WARN  1987 Pass/Carry rows missing end coords
+[3930182]  WARN  2052 Pass/Carry rows missing end coords
+[3930183]  WARN  1476 Pass/Carry rows missing end coords
+[3930184]  WARN  1466 Pass/Carry rows missing end coords
+[3938637]  WARN  1764 Pass/Carry rows missing end coords
+[3938638]  WARN  1667 Pass/Carry rows missing end coords
+[3938639]  WARN  2011 Pass/Carry rows missing end coords
+[3938640]  WARN  1920 Pass/Carry rows missing end coords
+[3938641]  WARN  1672 Pass/Carry rows missing end coords
+[3938642]  WARN  1674 Pass/Carry rows missing end coords
+[3938643]  WARN  1931 Pass/Carry rows missing end coords
+[3938644]  WARN  1938 Pass/Carry rows missing end coords
+[3938645]  WARN  1854 Pass/Carry rows missing end coords
+[3940878]  WARN  2038 Pass/Carry rows missing end coords
+[3940983]  WARN  1914 Pass/Carry rows missing end coords
+[3941017]  WARN  2510 Pass/Carry rows missing end coords
+[3941018]  WARN  2079 Pass/Carry rows missing end coords
+[3941019]  WARN  2165 Pass/Carry rows missing end coords
+[3941020]  WARN  2128 Pass/Carry rows missing end coords
+[3941021]  WARN  1521 Pass/Carry rows missing end coords
+[3941022]  WARN  1854 Pass/Carry rows missing end coords
+[3942226]  WARN  2322 Pass/Carry rows missing end coords
+[3942227]  WARN  2661 Pass/Carry rows missing end coords
+[3942349]  WARN  2868 Pass/Carry rows missing end coords
+[3942382]  WARN  1775 Pass/Carry rows missing end coords
+[3942752]  WARN  1713 Pass/Carry rows missing end coords
+[3942819]  WARN  1975 Pass/Carry rows missing end coords
+[3943043]  WARN  1676 Pass/Carry rows missing end coords
+------------------------------------------------------------
+Flattened: 51 matches
+Flatten run 2025-07-15T20:11:39.651404
+------------------------------------------------------------
+[3930158]  OK    Flattened 3373 rows
+[3930159]  OK    Flattened 3356 rows
+[3930160]  OK    Flattened 3796 rows
+[3930161]  OK    Flattened 4066 rows
+[3930162]  OK    Flattened 3509 rows
+[3930163]  OK    Flattened 3920 rows
+[3930164]  OK    Flattened 3543 rows
+[3930165]  OK    Flattened 3718 rows
+[3930166]  OK    Flattened 3602 rows
+[3930167]  OK    Flattened 3721 rows
+[3930168]  OK    Flattened 3880 rows
+[3930169]  OK    Flattened 3125 rows
+[3930170]  OK    Flattened 3552 rows
+[3930171]  OK    Flattened 3881 rows
+[3930172]  OK    Flattened 3982 rows
+[3930173]  OK    Flattened 3681 rows
+[3930174]  OK    Flattened 3786 rows
+[3930175]  OK    Flattened 3200 rows
+[3930176]  OK    Flattened 3724 rows
+[3930177]  OK    Flattened 3386 rows
+[3930178]  OK    Flattened 4006 rows
+[3930179]  OK    Flattened 3776 rows
+[3930180]  OK    Flattened 3198 rows
+[3930181]  OK    Flattened 3688 rows
+[3930182]  OK    Flattened 3787 rows
+[3930183]  OK    Flattened 2886 rows
+[3930184]  OK    Flattened 2953 rows
+[3938637]  OK    Flattened 3401 rows
+[3938638]  OK    Flattened 3169 rows
+[3938639]  OK    Flattened 3837 rows
+[3938640]  OK    Flattened 3512 rows
+[3938641]  OK    Flattened 3400 rows
+[3938642]  OK    Flattened 3332 rows
+[3938643]  OK    Flattened 3767 rows
+[3938644]  OK    Flattened 3659 rows
+[3938645]  OK    Flattened 3525 rows
+[3940878]  OK    Flattened 3853 rows
+[3940983]  OK    Flattened 3640 rows
+[3941017]  OK    Flattened 4764 rows
+[3941018]  OK    Flattened 3949 rows
+[3941019]  OK    Flattened 3941 rows
+[3941020]  OK    Flattened 4221 rows
+[3941021]  OK    Flattened 2996 rows
+[3941022]  OK    Flattened 3722 rows
+[3942226]  OK    Flattened 4463 rows
+[3942227]  OK    Flattened 4882 rows
+[3942349]  OK    Flattened 5190 rows
+[3942382]  OK    Flattened 3415 rows
+[3942752]  OK    Flattened 3328 rows
+[3942819]  OK    Flattened 3485 rows
+[3943043]  OK    Flattened 3312 rows
+------------------------------------------------------------
+Flattened: 51 matches
+Flatten run 2025-07-17T18:20:49.664132
+------------------------------------------------------------
+[3930158]  FAIL  773 Pass/Carry rows missing end coords
+[3930159]  FAIL  722 Pass/Carry rows missing end coords
+[3930160]  FAIL  844 Pass/Carry rows missing end coords
+[3930161]  FAIL  1090 Pass/Carry rows missing end coords
+[3930162]  FAIL  727 Pass/Carry rows missing end coords
+[3930163]  FAIL  947 Pass/Carry rows missing end coords
+[3930164]  FAIL  811 Pass/Carry rows missing end coords
+[3930165]  FAIL  800 Pass/Carry rows missing end coords
+[3930166]  FAIL  827 Pass/Carry rows missing end coords
+[3930167]  FAIL  875 Pass/Carry rows missing end coords
+[3930168]  FAIL  955 Pass/Carry rows missing end coords
+[3930169]  FAIL  648 Pass/Carry rows missing end coords
+[3930170]  FAIL  841 Pass/Carry rows missing end coords
+[3930171]  FAIL  930 Pass/Carry rows missing end coords
+[3930172]  FAIL  941 Pass/Carry rows missing end coords
+[3930173]  FAIL  942 Pass/Carry rows missing end coords
+[3930174]  FAIL  881 Pass/Carry rows missing end coords
+[3930175]  FAIL  713 Pass/Carry rows missing end coords
+[3930176]  FAIL  881 Pass/Carry rows missing end coords
+[3930177]  FAIL  693 Pass/Carry rows missing end coords
+[3930178]  FAIL  978 Pass/Carry rows missing end coords
+[3930179]  FAIL  920 Pass/Carry rows missing end coords
+[3930180]  FAIL  696 Pass/Carry rows missing end coords
+[3930181]  FAIL  902 Pass/Carry rows missing end coords
+[3930182]  FAIL  919 Pass/Carry rows missing end coords
+[3930183]  FAIL  615 Pass/Carry rows missing end coords
+[3930184]  FAIL  657 Pass/Carry rows missing end coords
+[3938637]  FAIL  810 Pass/Carry rows missing end coords
+[3938638]  FAIL  756 Pass/Carry rows missing end coords
+[3938639]  FAIL  912 Pass/Carry rows missing end coords
+[3938640]  FAIL  867 Pass/Carry rows missing end coords
+[3938641]  FAIL  757 Pass/Carry rows missing end coords
+[3938642]  FAIL  754 Pass/Carry rows missing end coords
+[3938643]  FAIL  898 Pass/Carry rows missing end coords
+[3938644]  FAIL  902 Pass/Carry rows missing end coords
+[3938645]  FAIL  850 Pass/Carry rows missing end coords
+[3940878]  FAIL  913 Pass/Carry rows missing end coords
+[3940983]  FAIL  864 Pass/Carry rows missing end coords
+[3941017]  FAIL  1124 Pass/Carry rows missing end coords
+[3941018]  FAIL  944 Pass/Carry rows missing end coords
+[3941019]  FAIL  996 Pass/Carry rows missing end coords
+[3941020]  FAIL  937 Pass/Carry rows missing end coords
+[3941021]  FAIL  644 Pass/Carry rows missing end coords
+[3941022]  FAIL  799 Pass/Carry rows missing end coords
+[3942226]  FAIL  1061 Pass/Carry rows missing end coords
+[3942227]  FAIL  1250 Pass/Carry rows missing end coords
+[3942349]  FAIL  1316 Pass/Carry rows missing end coords
+[3942382]  FAIL  810 Pass/Carry rows missing end coords
+[3942752]  FAIL  778 Pass/Carry rows missing end coords
+[3942819]  FAIL  910 Pass/Carry rows missing end coords
+[3943043]  FAIL  759 Pass/Carry rows missing end coords
+------------------------------------------------------------
+Success: 0   Failures: 51
+Flatten run 2025-07-17T18:23:21.220652
+------------------------------------------------------------
+[3930158]  OK    Flattened 3373 rows
+[3930159]  OK    Flattened 3356 rows
+[3930160]  OK    Flattened 3796 rows
+[3930161]  OK    Flattened 4066 rows
+[3930162]  OK    Flattened 3509 rows
+[3930163]  OK    Flattened 3920 rows
+[3930164]  OK    Flattened 3543 rows
+[3930165]  OK    Flattened 3718 rows
+[3930166]  OK    Flattened 3602 rows
+[3930167]  OK    Flattened 3721 rows
+[3930168]  OK    Flattened 3880 rows
+[3930169]  OK    Flattened 3125 rows
+[3930170]  OK    Flattened 3552 rows
+[3930171]  OK    Flattened 3881 rows
+[3930172]  OK    Flattened 3982 rows
+[3930173]  OK    Flattened 3681 rows
+[3930174]  OK    Flattened 3786 rows
+[3930175]  OK    Flattened 3200 rows
+[3930176]  OK    Flattened 3724 rows
+[3930177]  OK    Flattened 3386 rows
+[3930178]  OK    Flattened 4006 rows
+[3930179]  OK    Flattened 3776 rows
+[3930180]  OK    Flattened 3198 rows
+[3930181]  OK    Flattened 3688 rows
+[3930182]  OK    Flattened 3787 rows
+[3930183]  OK    Flattened 2886 rows
+[3930184]  OK    Flattened 2953 rows
+[3938637]  OK    Flattened 3401 rows
+[3938638]  OK    Flattened 3169 rows
+[3938639]  OK    Flattened 3837 rows
+[3938640]  OK    Flattened 3512 rows
+[3938641]  OK    Flattened 3400 rows
+[3938642]  OK    Flattened 3332 rows
+[3938643]  OK    Flattened 3767 rows
+[3938644]  OK    Flattened 3659 rows
+[3938645]  OK    Flattened 3525 rows
+[3940878]  OK    Flattened 3853 rows
+[3940983]  OK    Flattened 3640 rows
+[3941017]  OK    Flattened 4764 rows
+[3941018]  OK    Flattened 3949 rows
+[3941019]  OK    Flattened 3941 rows
+[3941020]  OK    Flattened 4221 rows
+[3941021]  OK    Flattened 2996 rows
+[3941022]  OK    Flattened 3722 rows
+[3942226]  OK    Flattened 4463 rows
+[3942227]  OK    Flattened 4882 rows
+[3942349]  OK    Flattened 5190 rows
+[3942382]  OK    Flattened 3415 rows
+[3942752]  OK    Flattened 3328 rows
+[3942819]  OK    Flattened 3485 rows
+[3943043]  OK    Flattened 3312 rows
+------------------------------------------------------------
+Flattened: 51 matches
