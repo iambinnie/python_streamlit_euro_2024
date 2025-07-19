@@ -20,7 +20,7 @@ def parse_shot_events(df) -> Dict[str, ShotEvent]:
             y=row.get("y"),
             shot_end_x=row.get("shot_end_x"),
             shot_end_y=row.get("shot_end_y"),
-            shot_end_z=row.get("shot_end_z"),  # ✅ NEW!
+            shot_end_z=row.get("shot_end_z"),
             shot_xg=row.get("shot_statsbomb_xg"),
             shot_outcome=row.get("shot_outcome"),
         )

@@ -11,20 +11,6 @@ from enum import Enum
 
 
 # ----------------------------------------------------------------------
-# Pitch view modes
-# ----------------------------------------------------------------------
-class PitchViewMode(Enum):
-    FULL = "full"
-    HALF = "half"
-    GOAL = "goal"
-
-    def use_half_pitch(self) -> bool:
-        """Return True if the half-pitch should be used."""
-        return self in {PitchViewMode.HALF, PitchViewMode.GOAL}
-        #return self in {PitchViewMode.HALF}
-
-
-# ----------------------------------------------------------------------
 # Base event model
 # ----------------------------------------------------------------------
 class BaseEvent(BaseModel):
@@ -44,9 +30,16 @@ class BaseEvent(BaseModel):
     pitch_view: PitchViewMode = PitchViewMode.FULL
 
     @staticmethod
-    def safe_str(val) -> str:
-        """Safe string conversion for None values."""
-        return str(val) if val is not None else "-"
+    def safe_str(val):
+        """Convert NaN or float('nan') to None; otherwise return as-is."""
+        try:
+            if val is None:
+                return None
+            if isinstance(val, float) and pd.isna(val):
+                return None
+            return val
+        except Exception:
+            return None
 
     def get_location(self, use_end: bool = False) -> Optional[tuple]:
         """Return (x, y) for plotting, switching to end coords if requested."""
@@ -57,21 +50,34 @@ class BaseEvent(BaseModel):
         return None
 
 
+
+
 # ----------------------------------------------------------------------
 # PassEvent
 # ----------------------------------------------------------------------
 class PassEvent(BaseEvent):
     pass_outcome: Optional[str] = None
+    pass_length: Optional[float] = None  # from "pass_length"
+    pass_angle: Optional[float] = None  # from "pass_angle"
+    pass_recipient: Optional[str] = None  # from "pass_recipient"
+    pass_height: Optional[str] = None  # from "pass_height"
     pass_end_x: Optional[float] = None
     pass_end_y: Optional[float] = None
+    pitch_view: PitchViewMode = PitchViewMode.FULL
+
 
     def is_completed(self) -> bool:
         """Return True if the pass is completed (no outcome or specific outcome)."""
-        return self.pass_outcome is None or self.pass_outcome.lower() == "complete"
+        return self.pass_outcome is None
 
     def get_color(self) -> str:
         """Return color based on pass completion."""
         return "green" if self.is_completed() else "red"
+
+    def to_arrow_coords(self) -> Optional[tuple[float, float, float, float]]:
+        if None in (self.x, self.y, self.pass_end_x, self.pass_end_y):
+            return None
+        return (self.x, self.y, self.pass_end_x, self.pass_end_y)
 
 
 # ----------------------------------------------------------------------
