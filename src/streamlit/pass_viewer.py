@@ -40,6 +40,7 @@ player = st.selectbox("Select Player", players)
 
 filtered = [e for e in filtered if e.player == player]
 
+
 # === Draw pitch and plot passes ===
 if filtered:
     event = filtered[0]
@@ -47,15 +48,19 @@ if filtered:
     fig, ax = pitch.draw(figsize=(9, 6))
 
     for e in filtered:
-        coords = e.to_arrow_coords()
-        if coords:
+        arrow = e.to_arrow_coords()
+        if arrow:
             color = "green" if e.is_completed() else "red"
-            pitch.arrows(*coords, ax=ax, width=1.5, headwidth=6, color=color, alpha=0.8)
+            pitch.arrows(*arrow, ax=ax, width=1.5, headwidth=6, color=color, alpha=0.8)
 
     st.pyplot(fig)
 
     # Optional table
-    with st.expander("Show Event Data"):
-        st.dataframe([e.model_dump() for e in filtered])
+    # with st.expander("Show Event Data"):
+    #     st.dataframe([e.model_dump() for e in filtered])
+    #
+    # for e in filtered[:10]:  # just 10 to avoid spam
+    #     st.write(f"{e.pass_outcome=}, {e.is_completed()=}")
+
 else:
     st.warning("No events to display.")

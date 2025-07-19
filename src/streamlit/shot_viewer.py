@@ -43,22 +43,36 @@ if filtered:
     fig, ax = pitch.draw(figsize=(9, 6))
 
     # Start/end toggle
-    view_mode = st.radio("Shot location mode", options=["Start", "End"], horizontal=True)
-    use_end = view_mode == "End"
+    view_mode = st.radio("Shot location mode", options=["Location Only", "Direction Arrow"], horizontal=True)
+    use_end = view_mode == "Direction Arrow"
 
     for e in filtered:
-        pos = e.get_location(use_end=use_end)
-        if pos:
-            x, y = pos
-            pitch.scatter(
-                x, y,
-                s=e.get_radius(),
-                color=e.get_color(),
-                edgecolors="black",
-                alpha=0.85,
-                zorder=2,
-                ax=ax
-            )
+        # Always plot start dot
+        x_start, y_start = e.get_location(use_end=False)
+        pitch.scatter(
+            x_start, y_start,
+            s=e.get_radius(),
+            color=e.get_color(),
+            edgecolors="black",
+            alpha=0.85,
+            zorder=2,
+            ax=ax
+        )
+
+        if use_end:
+            # Draw arrow from start to end location
+            x_end, y_end = e.get_location(use_end=True)
+            if x_end is not None and y_end is not None:
+                pitch.arrows(
+                    x_start, y_start,
+                    x_end, y_end,
+                    color=e.get_color(),
+                    width=2,
+                    headwidth=6,
+                    ax=ax,
+                    zorder=1,
+                    alpha=0.8,
+                )
 
     st.pyplot(fig)
 

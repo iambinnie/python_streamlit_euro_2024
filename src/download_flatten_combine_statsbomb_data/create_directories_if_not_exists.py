@@ -1,43 +1,21 @@
-# === File: download_and_flatten_statsbomb_data/create_directories_if_not_exists.py ===
+# === File: src/download_flatten_combine_statsbomb_data/create_directories_if_not_exists.py ===
 
 """
-Creates required directories for the StatsBomb ETL pipeline.
-Appends setup status to a log file with timestamps.
-
-Directories:
-- raw/
-- flattened/
-- errors/
-- base data dir (if not already created)
+Creates required directories for StatsBomb data ETL if they don't exist.
 """
 
 import os
-from datetime import datetime
-from src.config.constants import BASE_DATA_DIR
-
-# Define full paths for all subdirectories
-REQUIRED_DIRS = [
-    BASE_DATA_DIR,
-    os.path.join(BASE_DATA_DIR, "raw"),
-    os.path.join(BASE_DATA_DIR, "flattened"),
-    os.path.join(BASE_DATA_DIR, "errors")
-]
-
-LOG_PATH = os.path.join(BASE_DATA_DIR, "setup.log")
+from src.config.constants import BASE_DATA_DIR, RAW_DIR, ERRORS_DIR, FLATTENED_DIR
 
 
 def run():
-    """Creates necessary directories if they don't exist, and logs the outcome."""
-    log_lines = [f"[{datetime.now().isoformat()}] Directory setup check:\n"]
+    os.makedirs(BASE_DATA_DIR, exist_ok=True)
+    os.makedirs(RAW_DIR, exist_ok=True)
+    os.makedirs(ERRORS_DIR, exist_ok=True)
+    os.makedirs(FLATTENED_DIR, exist_ok=True)
 
-    for directory in REQUIRED_DIRS:
-        if not os.path.exists(directory):
-            os.makedirs(directory, exist_ok=True)
-            log_lines.append(f"  CREATED: {directory}\n")
-        else:
-            log_lines.append(f"  EXISTS:  {directory}\n")
+    log_path = os.path.join(BASE_DATA_DIR, "setup.log")
+    with open(log_path, "a", encoding="utf-8") as log_file:
+        log_file.write("Directory check complete.\n")
 
-    with open(LOG_PATH, "a", encoding="utf-8") as log_file:
-        log_file.writelines(log_lines)
-
-    print("Directory check complete. Log written to:", LOG_PATH)
+    print(f"Directory check complete. Log written to: {log_path}")

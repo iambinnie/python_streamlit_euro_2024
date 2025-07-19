@@ -28,13 +28,13 @@ def parse_pass_events(df: pd.DataFrame) -> Dict[str, PassEvent]:
                 match_name=row["match_name"],
                 x=row["x"],
                 y=row["y"],
-                end_x=row.get("end_x"),
-                end_y=row.get("end_y"),
-                outcome=BaseEvent.safe_str(row.get("pass_outcome")),
-                length=row.get("pass_length"),
-                angle=row.get("pass_angle"),
-                recipient=BaseEvent.safe_str(row.get("pass_recipient")),
-                height=BaseEvent.safe_str(row.get("pass_height")),
+                pass_end_x=row.get("pass_end_x"),
+                pass_end_y=row.get("pass_end_y"),
+                pass_outcome=BaseEvent.safe_str(row.get("pass_outcome")),
+                pass_length=row.get("pass_length"),
+                pass_angle=row.get("pass_angle"),
+                pass_recipient=BaseEvent.safe_str(row.get("pass_recipient")),
+                pass_height=BaseEvent.safe_str(row.get("pass_height")),
             )
             events[event.id] = event
         except Exception as e:
