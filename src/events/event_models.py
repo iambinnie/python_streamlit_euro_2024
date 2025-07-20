@@ -7,6 +7,7 @@ Defines core event models for StatsBomb data, including PassEvent and ShotEvent.
 
 from typing import Optional
 from pydantic import BaseModel
+from src.events.pitch_config import PitchViewMode
 from enum import Enum
 
 
@@ -41,15 +42,19 @@ class BaseEvent(BaseModel):
         except Exception:
             return None
 
+    # def get_location(self, use_end: bool = False) -> Optional[tuple]:
+    #     """Return (x, y) for plotting, switching to end coords if requested."""
+    #     if use_end and self.end_x is not None and self.end_y is not None:
+    #         return self.end_x, self.end_y
+    #     if self.x is not None and self.y is not None:
+    #         return self.x, self.y
+    #     return None
+
     def get_location(self, use_end: bool = False) -> Optional[tuple]:
-        """Return (x, y) for plotting, switching to end coords if requested."""
-        if use_end and self.end_x is not None and self.end_y is not None:
-            return self.end_x, self.end_y
+        """Return (x, y) start location only; end coords handled in subclasses."""
         if self.x is not None and self.y is not None:
             return self.x, self.y
         return None
-
-
 
 
 # ----------------------------------------------------------------------
