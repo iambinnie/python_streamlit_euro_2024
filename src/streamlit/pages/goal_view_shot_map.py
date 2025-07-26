@@ -2,9 +2,9 @@ import os
 import sys
 import pandas as pd
 import streamlit as st
-import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+from matplotlib import pyplot as plt
 
-# Add project root to path
 # Determine and add the project root (only once)
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, "..", "..", ".."))
@@ -13,6 +13,9 @@ if PROJECT_ROOT not in sys.path:
 
 from src.config.constants import BASE_DATA_DIR
 from src.events.parsers.parse_shot_events import parse_shot_events
+from src.streamlit.shared.shared_ui import render_shared_header, shared_filters
+from src.events.event_models import OUTCOME_COLOR_MAP
+
 
 DATA_PATH = os.path.join(BASE_DATA_DIR, "euro24_all_events_combined.csv")
 
@@ -24,23 +27,23 @@ def load_shot_events(path: str):
     return parse_shot_events(df_shot)
 
 
-# === Load data ===
+# === Load & filter data ===
 shot_events_dict = load_shot_events(DATA_PATH)
-shot_events = list(shot_events_dict.values())
+df = pd.read_csv(DATA_PATH, low_memory=False)
+df_shot = df[df["type"] == "Shot"].copy()
 
-st.title("Euro 2024 – Goal View Shot Map")
+render_shared_header("Euro 2024 – Goal View Shot Map")
 
-teams = sorted(set(e.team for e in shot_events))
-team = st.selectbox("Select Team", teams)
-filtered = [e for e in shot_events if e.team == team]
+filtered_df, team, player, match = shared_filters(df_shot, enable_player_toggle=False)
 
-# === Period filter ===
-if filtered:
-    periods = sorted(set(e.period for e in filtered if e.period is not None))
-    period_selected = st.multiselect("Period(s)", periods, default=periods)
-    filtered = [e for e in filtered if e.period in period_selected]
+# Convert filtered DataFrame back to ShotEvent objects (using stable IDs)
+filtered_events = [
+    shot_events_dict.get(row["id"])
+    for _, row in filtered_df.iterrows()
+    if row["id"] in shot_events_dict
+]
 
-if filtered:
+if filtered_events:
     fig, ax = plt.subplots(figsize=(7, 5))
     ax.set_title(f"{team} – Goal View", fontsize=14)
 
@@ -54,7 +57,7 @@ if filtered:
             [0, 0, crossbar_height, crossbar_height, 0],
             color="black", lw=3, zorder=1)
 
-    # Correct aspect ratio & Y orientation (0 = bottom, crossbar at top)
+    # Correct aspect ratio
     ax.set_xlim(-0.2, goal_width + 0.2)
     ax.set_ylim(-0.2, crossbar_height + 0.2)
     ax.set_aspect('equal', adjustable='box')
@@ -68,7 +71,7 @@ if filtered:
         ax.plot([0, goal_width], [y, y], color="lightgray", lw=0.8, alpha=0.7, zorder=1)
 
     # Plot shots
-    for e in filtered:
+    for e in filtered_events:
         if e.shot_end_y is None or e.shot_end_x is None:
             continue
 
@@ -85,6 +88,21 @@ if filtered:
             zorder=2
         )
 
+
+    # === Show legend toggle ===
+    if st.checkbox("Show Legend", value=True):
+        legend_patches = [
+            mpatches.Patch(color="gold", label="Goal"),
+            mpatches.Patch(color="orange", label="Saved"),
+            mpatches.Patch(color="red", label="Off Target"),
+            mpatches.Patch(color="blue", label="Blocked/Post/Bar"),
+            mpatches.Patch(color="gray", label="Other/Unknown"),
+        ]
+        ax.legend(handles=legend_patches, loc="upper right", frameon=True)
+
     st.pyplot(fig)
+
+    with st.expander("Show Shot Event Data"):
+        st.dataframe([e.model_dump() for e in filtered_events])
 else:
     st.warning("No shot events for this selection.")
