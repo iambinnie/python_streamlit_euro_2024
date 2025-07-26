@@ -6,6 +6,8 @@ Defines core event models for StatsBomb data, including PassEvent and ShotEvent.
 """
 
 from typing import Optional
+
+import pandas as pd
 from pydantic import BaseModel
 from src.events.pitch_config import PitchViewMode
 from enum import Enum

@@ -1,14 +1,17 @@
-# === File: src/streamlit/shot_viewer.py ===
+# === File: src/streamlit/pages/2_Shot_Viewer.py ===
+"""
+Shot Event Viewer – displays shots with start/end arrows,
+tournament or match filtering, and optional player selection.
+"""
 
 import os
 import sys
-
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
 from mplsoccer import VerticalPitch
+from matplotlib.patches import Patch
 
-# Add project root to path
 # Determine and add the project root (only once)
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, "..", "..", ".."))
@@ -17,8 +20,14 @@ if PROJECT_ROOT not in sys.path:
 
 from src.config.constants import BASE_DATA_DIR
 from src.events.parsers.parse_shot_events import parse_shot_events
+from src.streamlit.shared.shared_ui import (
+    render_shared_header,
+    shared_filters, render_shot_legend,
+)
+from src.events.event_models import OUTCOME_COLOR_MAP
 
 DATA_PATH = os.path.join(BASE_DATA_DIR, "euro24_all_events_combined.csv")
+
 
 @st.cache_data
 def load_shot_events(path: str):
@@ -26,23 +35,26 @@ def load_shot_events(path: str):
     df_shot = df[df["type"] == "Shot"].copy()
     return parse_shot_events(df_shot)
 
-# === Load data ===
+
+# === Load and filter data ===
 shot_events_dict = load_shot_events(DATA_PATH)
-shot_events = list(shot_events_dict.values())
+render_shared_header("Euro 2024 – Shot Viewer (Model-Based)")
 
-st.title("Euro 2024 – Shot Viewer (Model-Based)")
+# Shared filters (player toggle enabled)
+df = pd.read_csv(DATA_PATH, low_memory=False)
+df_shot = df[df["type"] == "Shot"].copy()
+filtered_df, team, player, match = shared_filters(df_shot, enable_player_toggle=True)
 
-teams = sorted(set(e.team for e in shot_events))
-team = st.selectbox("Select Team", teams)
-filtered = [e for e in shot_events if e.team == team]
+# Convert filtered DataFrame back to ShotEvent objects (using stable IDs)
+filtered_events = [
+    shot_events_dict.get(row["id"])
+    for _, row in filtered_df.iterrows()
+    if row["id"] in shot_events_dict
+]
 
-players = sorted(set(e.player for e in filtered))
-player = st.selectbox("Select Player", players)
-filtered = [e for e in filtered if e.player == player]
-
-# === Pitch config based on model ===
-if filtered:
-    event = filtered[0]
+# === Pitch Visualization ===
+if filtered_events:
+    event = filtered_events[0]
     pitch = VerticalPitch(pitch_type="statsbomb", half=event.pitch_view.use_half_pitch())
     fig, ax = pitch.draw(figsize=(9, 6))
 
@@ -50,7 +62,7 @@ if filtered:
     view_mode = st.radio("Shot location mode", options=["Location Only", "Direction Arrow"], horizontal=True)
     use_end = view_mode == "Direction Arrow"
 
-    for e in filtered:
+    for e in filtered_events:
         # Always plot start dot
         x_start, y_start = e.get_location(use_end=False)
         pitch.scatter(
@@ -78,9 +90,12 @@ if filtered:
                     alpha=0.8,
                 )
 
+    # === Show legend toggle ===
+    show_legend = st.checkbox("Show Legend", value=True)
+    render_shot_legend(ax, show=show_legend)
     st.pyplot(fig)
 
     with st.expander("Show Shot Event Data"):
-        st.dataframe([e.model_dump() for e in filtered])
+        st.dataframe([e.model_dump() for e in filtered_events])
 else:
     st.warning("No shot events for this selection.")

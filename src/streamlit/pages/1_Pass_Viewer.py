@@ -1,32 +1,30 @@
-# === File: src/streamlit/1_Pass_Viewer.py ===
+# === File: src/streamlit/pages/1_Pass_Viewer.py ===
+"""
+Pass Event Viewer – displays completed/incomplete passes on a pitch,
+with tournament or match filtering and optional player selection.
+"""
 
 import os
 import sys
-
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
-from mplsoccer import VerticalPitch
+from mplsoccer import VerticalPitch, Pitch
 
-# Add project root to PYTHONPATH
-# Determine and add the project root (only once)
+# Ensure project root
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, "..", "..", ".."))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from src.events.parsers.parse_pass_events import parse_pass_events
-from src.config.constants import BASE_DATA_DIR
-# ----------------------------------------------------------------------
-# Project root and shared UI imports
-# ----------------------------------------------------------------------
 from src.streamlit.shared.shared_ui import (
     render_shared_header,
-    shared_filters
+    shared_filters,
 )
+from src.config.constants import BASE_DATA_DIR
+from src.events.parsers.parse_pass_events import parse_pass_events
 
 DATA_PATH = os.path.join(BASE_DATA_DIR, "euro24_all_events_combined.csv")
-
 
 @st.cache_data
 def load_pass_events(path: str):
@@ -34,44 +32,44 @@ def load_pass_events(path: str):
     df_pass = df[df["type"] == "Pass"].copy()
     return parse_pass_events(df_pass)
 
-
-# === Load and filter ===
+# === Load and filter data ===
 pass_events_dict = load_pass_events(DATA_PATH)
 pass_events = list(pass_events_dict.values())
 
-st.title("Euro 2024 – Pass Viewer (Model-Based)")
+render_shared_header("Euro 2024 – Pass Viewer")
 
-teams = sorted(set(e.team for e in pass_events))
-team = st.selectbox("Select Team", teams)
+# Shared filters (hierarchical)
+df = pd.read_csv(DATA_PATH, low_memory=False)
+df_pass = df[df["type"] == "Pass"].copy()
+filtered_df, team, player, match = shared_filters(df_pass, enable_player_toggle=True)
 
-filtered = [e for e in pass_events if e.team == team]
+# Convert filtered DataFrame back to PassEvent objects
+filtered_events = [
+    pass_events_dict.get(row["id"])
+    for _, row in filtered_df.iterrows()
+    if row["id"] in pass_events_dict
+]
 
-players = sorted(set(e.player for e in filtered))
-player = st.selectbox("Select Player", players)
 
-filtered = [e for e in filtered if e.player == player]
-
-
-# === Draw pitch and plot passes ===
-if filtered:
-    event = filtered[0]
-    pitch = VerticalPitch(pitch_type="statsbomb", half=event.pitch_view.use_half_pitch())
+# === Pitch Visualization ===
+if filtered_events:
+    pitch = Pitch(pitch_type="statsbomb", goal_type= 'box', half=False)
     fig, ax = pitch.draw(figsize=(9, 6))
 
-    for e in filtered:
-        arrow = e.to_arrow_coords()
-        if arrow:
-            color = "green" if e.is_completed() else "red"
-            pitch.arrows(*arrow, ax=ax, width=1.5, headwidth=6, color=color, alpha=0.8)
-
+    for e in filtered_events:
+        coords = e.to_arrow_coords()
+        if coords:
+            pitch.arrows(
+                *coords,
+                color=e.get_color(),
+                alpha=0.7,
+                width=2,
+                headwidth=6,
+                ax=ax
+            )
     st.pyplot(fig)
 
-    # Optional table
-    # with st.expander("Show Event Data"):
-    #     st.dataframe([e.model_dump() for e in filtered])
-    #
-    # for e in filtered[:10]:  # just 10 to avoid spam
-    #     st.write(f"{e.pass_outcome=}, {e.is_completed()=}")
-
+    with st.expander("Show Pass Event Data"):
+        st.dataframe([e.model_dump() for e in filtered_events])
 else:
-    st.warning("No events to display.")
+    st.warning("No pass events for this selection.")
