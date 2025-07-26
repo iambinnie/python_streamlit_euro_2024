@@ -1,0 +1,39 @@
+# === Python cache ===
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+*.eggs/
+
+# === Virtual environments ===
+.venv/
+venv/
+env/
+
+# === Logs and temporary files ===
+*.log
+*.tmp
+*.swp
+
+# === Data files (optional, uncomment if you don’t want to track raw/flattened data) ===
+# data/raw/
+# data/flattened/
+# data/euro24_all_events_combined.csv
+
+# === Streamlit cache ===
+.streamlit/
+*/.streamlit/
+
+# === Jupyter/IPython ===
+.ipynb_checkpoints/
+
+# === IDE/Editor specific ===
+.idea/
+.vscode/
+*.iml
+
+# === OS files ===
+.DS_Store
+Thumbs.db
