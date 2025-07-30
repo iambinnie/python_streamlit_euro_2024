@@ -23,6 +23,8 @@ from src.streamlit.shared.shared_ui import (
 )
 from src.config.constants import BASE_DATA_DIR
 from src.events.parsers.parse_pass_events import parse_pass_events
+from src.events.event_models import PassEvent
+
 
 DATA_PATH = os.path.join(BASE_DATA_DIR, "euro24_all_events_combined.csv")
 
@@ -67,6 +69,7 @@ if filtered_events:
                 headwidth=6,
                 ax=ax
             )
+    ax.legend(handles=PassEvent.get_legend_patches(), loc="upper right")
     st.pyplot(fig)
 
     with st.expander("Show Pass Event Data"):

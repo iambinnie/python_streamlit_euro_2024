@@ -5,12 +5,11 @@ Defines core event models for StatsBomb data, including PassEvent and ShotEvent.
 - ShotEvent: Includes xG scaling, outcome-based coloring, and goal-view support.
 """
 
-from typing import Optional
-
+from typing import Optional, ClassVar, Dict, List
 import pandas as pd
 from pydantic import BaseModel
 from src.events.pitch_config import PitchViewMode
-from enum import Enum
+import matplotlib.patches as mpatches
 
 
 # ----------------------------------------------------------------------
@@ -44,14 +43,6 @@ class BaseEvent(BaseModel):
         except Exception:
             return None
 
-    # def get_location(self, use_end: bool = False) -> Optional[tuple]:
-    #     """Return (x, y) for plotting, switching to end coords if requested."""
-    #     if use_end and self.end_x is not None and self.end_y is not None:
-    #         return self.end_x, self.end_y
-    #     if self.x is not None and self.y is not None:
-    #         return self.x, self.y
-    #     return None
-
     def get_location(self, use_end: bool = False) -> Optional[tuple]:
         """Return (x, y) start location only; end coords handled in subclasses."""
         if self.x is not None and self.y is not None:
@@ -64,14 +55,20 @@ class BaseEvent(BaseModel):
 # ----------------------------------------------------------------------
 class PassEvent(BaseEvent):
     pass_outcome: Optional[str] = None
-    pass_length: Optional[float] = None  # from "pass_length"
-    pass_angle: Optional[float] = None  # from "pass_angle"
-    pass_recipient: Optional[str] = None  # from "pass_recipient"
-    pass_height: Optional[str] = None  # from "pass_height"
+    pass_length: Optional[float] = None
+    pass_angle: Optional[float] = None
+    pass_recipient: Optional[str] = None
+    pass_height: Optional[str] = None
     pass_end_x: Optional[float] = None
     pass_end_y: Optional[float] = None
     pitch_view: PitchViewMode = PitchViewMode.FULL
 
+    # ✅ Class-level color map
+    COLOR_MAP: ClassVar[Dict[str, str]] = {
+        "complete": "green",
+        "incomplete": "red",
+        "high-risk": "yellow",  # Example: steep angles or long risky passes
+    }
 
     def is_completed(self) -> bool:
         """Return True if the pass is completed (no outcome or specific outcome)."""
@@ -79,32 +76,40 @@ class PassEvent(BaseEvent):
 
     def get_color(self) -> str:
         """Return color based on pass completion."""
-        return "green" if self.is_completed() else "red"
+        if not self.is_completed():
+            return self.COLOR_MAP["incomplete"]
+        if self.pass_angle and abs(self.pass_angle) > 2.5:  # arbitrary risk threshold
+            return self.COLOR_MAP["high-risk"]
+        return self.COLOR_MAP["complete"]
 
     def to_arrow_coords(self) -> Optional[tuple[float, float, float, float]]:
         if None in (self.x, self.y, self.pass_end_x, self.pass_end_y):
             return None
         return (self.x, self.y, self.pass_end_x, self.pass_end_y)
 
+    @classmethod
+    def get_legend_patches(cls) -> List[mpatches.Patch]:
+        """Generate standardized legend patches for pass outcomes."""
+        return [mpatches.Patch(color=color, label=label.title()) for label, color in cls.COLOR_MAP.items()]
+
 
 # ----------------------------------------------------------------------
 # ShotEvent
 # ----------------------------------------------------------------------
-
-OUTCOME_COLOR_MAP = {
-    "goal": "gold",
-    "saved": "orange",
-    "saved to post": "orange",
-    "saved to woodwork": "orange",
-    "off t": "red",          # "off target" variants
-    "post": "blue",          # includes "hit the post"/"off the post"
-    "bar": "blue",           # includes "crossbar"
-    "blocked": "blue",
-    "deflected": "blue",
-    "other": "gray",         # catch-all for unusual categories
-}
-
 class ShotEvent(BaseEvent):
+    COLOR_MAP: ClassVar[Dict[str, str]] = {
+        "goal": "gold",
+        "saved": "orange",
+        "saved to post": "orange",
+        "saved to woodwork": "orange",
+        "off t": "red",
+        "post": "blue",
+        "bar": "blue",
+        "blocked": "blue",
+        "deflected": "blue",
+        "other": "gray",
+    }
+
     shot_xg: float
     shot_outcome: Optional[str] = None
     shot_end_x: Optional[float] = None
@@ -121,10 +126,10 @@ class ShotEvent(BaseEvent):
         if not self.shot_outcome:
             return "gray"
         key = self.shot_outcome.lower()
-        for outcome_key, color in OUTCOME_COLOR_MAP.items():
+        for outcome_key, color in self.COLOR_MAP.items():
             if outcome_key in key:
                 return color
-        return "gray"  # fallback for unknown outcomes
+        return "gray"
 
     def get_location(self, use_end: bool = False) -> Optional[tuple]:
         """Return start or end shot location (x, y)."""
@@ -139,3 +144,13 @@ class ShotEvent(BaseEvent):
         gx = (self.shot_end_y - 36) / 8 * 7.32
         gy = self.shot_end_z if self.shot_end_z is not None else 0
         return gx, gy
+
+    @classmethod
+    def get_legend_patches(cls) -> List[mpatches.Patch]:
+        """Generate standardized legend patches for shot outcomes."""
+        unique_labels = {}
+        for key, color in cls.COLOR_MAP.items():
+            label = key.replace("_", " ").title()
+            if label not in unique_labels:
+                unique_labels[label] = mpatches.Patch(color=color, label=label)
+        return list(unique_labels.values())

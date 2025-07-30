@@ -13,9 +13,8 @@ if PROJECT_ROOT not in sys.path:
 
 from src.config.constants import BASE_DATA_DIR
 from src.events.parsers.parse_shot_events import parse_shot_events
-from src.streamlit.shared.shared_ui import render_shared_header, shared_filters
-from src.events.event_models import OUTCOME_COLOR_MAP
-
+from src.streamlit.shared.shared_ui import render_shared_header, shared_filters, render_shot_legend
+from src.events.event_models import ShotEvent
 
 DATA_PATH = os.path.join(BASE_DATA_DIR, "euro24_all_events_combined.csv")
 
@@ -88,17 +87,9 @@ if filtered_events:
             zorder=2
         )
 
-
     # === Show legend toggle ===
-    if st.checkbox("Show Legend", value=True):
-        legend_patches = [
-            mpatches.Patch(color="gold", label="Goal"),
-            mpatches.Patch(color="orange", label="Saved"),
-            mpatches.Patch(color="red", label="Off Target"),
-            mpatches.Patch(color="blue", label="Blocked/Post/Bar"),
-            mpatches.Patch(color="gray", label="Other/Unknown"),
-        ]
-        ax.legend(handles=legend_patches, loc="upper right", frameon=True)
+    show_legend = st.checkbox("Show Legend", value=True)
+    render_shot_legend(ax, show=show_legend)
 
     st.pyplot(fig)
 

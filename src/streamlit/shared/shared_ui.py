@@ -17,7 +17,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, "..", "..", ".."))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from src.events.event_models import OUTCOME_COLOR_MAP
+from src.events.event_models import ShotEvent
 
 def render_shared_header(title: str):
     st.markdown(f"## {title}")
@@ -61,24 +61,19 @@ def shared_filters(df: pd.DataFrame, enable_player_toggle: bool = True):
 
 def render_shot_legend(ax, show: bool = True):
     """
-    Attaches a standardized shot outcome legend to a Matplotlib Axes.
-    Forces legend refresh to reflect updated OUTCOME_COLOR_MAP.
+    Attaches or removes a standardized shot outcome legend to a Matplotlib Axes,
+    using the ShotEvent model's get_legend_patches() method.
     """
-    if not show:
-        # Clear existing legend if toggled off
-        if ax.get_legend():
-            ax.get_legend().remove()
-        return
+    # Always remove existing legend to prevent stale handles
+    existing_legend = ax.get_legend()
+    if existing_legend:
+        existing_legend.remove()
 
-    # Force-remove any previous legend to avoid stale handles
-    if ax.get_legend():
-        ax.get_legend().remove()
-
-    # Rebuild from OUTCOME_COLOR_MAP
-    unique_labels = {}
-    for key, color in OUTCOME_COLOR_MAP.items():
-        label = key.replace("_", " ").title()
-        if label not in unique_labels:
-            unique_labels[label] = mpatches.Patch(color=color, label=label)
-
-    ax.legend(handles=list(unique_labels.values()), loc="upper right", frameon=True)
+    # Only add a new legend if the toggle is active
+    if show:
+        try:
+            from src.events.event_models import ShotEvent
+            legend_handles = ShotEvent.get_legend_patches()
+            ax.legend(handles=legend_handles, loc="upper right", frameon=True)
+        except Exception as e:
+            print(f"Failed to render legend: {e}")

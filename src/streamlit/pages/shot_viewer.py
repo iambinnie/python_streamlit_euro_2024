@@ -24,7 +24,7 @@ from src.streamlit.shared.shared_ui import (
     render_shared_header,
     shared_filters, render_shot_legend,
 )
-from src.events.event_models import OUTCOME_COLOR_MAP
+from src.events.event_models import ShotEvent
 
 DATA_PATH = os.path.join(BASE_DATA_DIR, "euro24_all_events_combined.csv")
 
@@ -93,6 +93,7 @@ if filtered_events:
     # === Show legend toggle ===
     show_legend = st.checkbox("Show Legend", value=True)
     render_shot_legend(ax, show=show_legend)
+
     st.pyplot(fig)
 
     with st.expander("Show Shot Event Data"):
