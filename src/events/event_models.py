@@ -8,6 +8,8 @@ Defines core event models for StatsBomb data, including PassEvent and ShotEvent.
 from typing import Optional, ClassVar, Dict, List
 import pandas as pd
 from pydantic import BaseModel
+
+from src.config.colour_mappings import SHOT_OUTCOME_COLOR_MAP, PASS_OUTCOME_COLOR_MAP
 from src.events.pitch_config import PitchViewMode
 import matplotlib.patches as mpatches
 
@@ -49,6 +51,18 @@ class BaseEvent(BaseModel):
             return self.x, self.y
         return None
 
+    def get_outcome_color(self, event_string: Optional[str], mapping: dict) -> str:
+        """
+        Generic method to return color based on outcome using a mapping dictionary.
+        """
+        if not event_string:
+            return "gray"
+        key = event_string.lower()
+        for outcome_key, color in mapping.items():
+            if outcome_key in key:
+                return color
+        return "gray"
+
 
 # ----------------------------------------------------------------------
 # PassEvent
@@ -63,24 +77,22 @@ class PassEvent(BaseEvent):
     pass_end_y: Optional[float] = None
     pitch_view: PitchViewMode = PitchViewMode.FULL
 
-    # ✅ Class-level color map
-    COLOR_MAP: ClassVar[Dict[str, str]] = {
-        "complete": "green",
-        "incomplete": "red",
-        "high-risk": "yellow",  # Example: steep angles or long risky passes
-    }
 
     def is_completed(self) -> bool:
         """Return True if the pass is completed (no outcome or specific outcome)."""
         return self.pass_outcome is None
 
     def get_color(self) -> str:
-        """Return color based on pass completion."""
-        if not self.is_completed():
-            return self.COLOR_MAP["incomplete"]
-        if self.pass_angle and abs(self.pass_angle) > 2.5:  # arbitrary risk threshold
-            return self.COLOR_MAP["high-risk"]
-        return self.COLOR_MAP["complete"]
+        """Return color based on pass outcome using external mapping."""
+        if self.pass_outcome is None:
+            return PASS_OUTCOME_COLOR_MAP.get("complete", "gray")
+
+        key = self.pass_outcome.lower()
+        for outcome_key, color in PASS_OUTCOME_COLOR_MAP.items():
+            if outcome_key in key:
+                return color
+
+        return PASS_OUTCOME_COLOR_MAP.get("other", "gray")
 
     def to_arrow_coords(self) -> Optional[tuple[float, float, float, float]]:
         if None in (self.x, self.y, self.pass_end_x, self.pass_end_y):
@@ -88,27 +100,16 @@ class PassEvent(BaseEvent):
         return (self.x, self.y, self.pass_end_x, self.pass_end_y)
 
     @classmethod
-    def get_legend_patches(cls) -> List[mpatches.Patch]:
-        """Generate standardized legend patches for pass outcomes."""
-        return [mpatches.Patch(color=color, label=label.title()) for label, color in cls.COLOR_MAP.items()]
-
+    def get_legend_patches(cls):
+        return [
+            mpatches.Patch(color=color, label=key.title())
+            for key, color in PASS_OUTCOME_COLOR_MAP.items()
+        ]
 
 # ----------------------------------------------------------------------
 # ShotEvent
 # ----------------------------------------------------------------------
 class ShotEvent(BaseEvent):
-    COLOR_MAP: ClassVar[Dict[str, str]] = {
-        "goal": "gold",
-        "saved": "orange",
-        "saved to post": "orange",
-        "saved to woodwork": "orange",
-        "off t": "red",
-        "post": "blue",
-        "bar": "blue",
-        "blocked": "blue",
-        "deflected": "blue",
-        "other": "gray",
-    }
 
     shot_xg: float
     shot_outcome: Optional[str] = None
@@ -122,14 +123,8 @@ class ShotEvent(BaseEvent):
         return max(30, self.shot_xg * 300)
 
     def get_color(self) -> str:
-        """Map shot outcome to standardized color groups."""
-        if not self.shot_outcome:
-            return "gray"
-        key = self.shot_outcome.lower()
-        for outcome_key, color in self.COLOR_MAP.items():
-            if outcome_key in key:
-                return color
-        return "gray"
+        """Color based on shot outcome."""
+        return self.get_outcome_color(self.shot_outcome, SHOT_OUTCOME_COLOR_MAP)
 
     def get_location(self, use_end: bool = False) -> Optional[tuple]:
         """Return start or end shot location (x, y)."""
@@ -145,12 +140,11 @@ class ShotEvent(BaseEvent):
         gy = self.shot_end_z if self.shot_end_z is not None else 0
         return gx, gy
 
+
     @classmethod
-    def get_legend_patches(cls) -> List[mpatches.Patch]:
-        """Generate standardized legend patches for shot outcomes."""
-        unique_labels = {}
-        for key, color in cls.COLOR_MAP.items():
-            label = key.replace("_", " ").title()
-            if label not in unique_labels:
-                unique_labels[label] = mpatches.Patch(color=color, label=label)
-        return list(unique_labels.values())
+    def get_legend_patches(cls):
+        return [
+            mpatches.Patch(color=color, label=key.title())
+            for key, color in SHOT_OUTCOME_COLOR_MAP.items()
+        ]
+

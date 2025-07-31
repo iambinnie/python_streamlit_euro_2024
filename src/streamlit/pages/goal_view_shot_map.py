@@ -13,7 +13,7 @@ if PROJECT_ROOT not in sys.path:
 
 from src.config.constants import BASE_DATA_DIR
 from src.events.parsers.parse_shot_events import parse_shot_events
-from src.streamlit.shared.shared_ui import render_shared_header, shared_filters, render_shot_legend
+from src.streamlit.shared.shared_ui import render_shared_header, shared_filters, render_event_legend
 from src.events.event_models import ShotEvent
 
 DATA_PATH = os.path.join(BASE_DATA_DIR, "euro24_all_events_combined.csv")
@@ -89,8 +89,7 @@ if filtered_events:
 
     # === Show legend toggle ===
     show_legend = st.checkbox("Show Legend", value=True)
-    render_shot_legend(ax, show=show_legend)
-
+    render_event_legend(ax, ShotEvent, show_legend)
     st.pyplot(fig)
 
     with st.expander("Show Shot Event Data"):

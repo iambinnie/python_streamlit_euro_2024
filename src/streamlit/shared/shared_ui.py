@@ -59,21 +59,24 @@ def shared_filters(df: pd.DataFrame, enable_player_toggle: bool = True):
 
     return filtered_df, team, player, match_selected
 
-def render_shot_legend(ax, show: bool = True):
-    """
-    Attaches or removes a standardized shot outcome legend to a Matplotlib Axes,
-    using the ShotEvent model's get_legend_patches() method.
-    """
-    # Always remove existing legend to prevent stale handles
-    existing_legend = ax.get_legend()
-    if existing_legend:
-        existing_legend.remove()
 
-    # Only add a new legend if the toggle is active
+def render_event_legend(ax, event_cls, show: bool = True):
+    """
+    Generic legend renderer for event types using the model's get_legend_patches() method.
+
+    Parameters:
+        ax: Matplotlib Axes to draw on
+        event_cls: A class like ShotEvent or PassEvent, with get_legend_patches() method
+        show: Whether to display the legend
+    """
+    # Remove any existing legend
+    if ax.get_legend():
+        ax.get_legend().remove()
+
+    # Add new legend if toggle is on
     if show:
         try:
-            from src.events.event_models import ShotEvent
-            legend_handles = ShotEvent.get_legend_patches()
+            legend_handles = event_cls.get_legend_patches()
             ax.legend(handles=legend_handles, loc="upper right", frameon=True)
         except Exception as e:
             print(f"Failed to render legend: {e}")
