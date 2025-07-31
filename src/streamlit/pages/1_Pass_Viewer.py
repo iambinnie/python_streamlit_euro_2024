@@ -20,6 +20,7 @@ if PROJECT_ROOT not in sys.path:
 from src.streamlit.shared.shared_ui import (
     render_shared_header,
     shared_filters,
+    render_event_legend,
 )
 from src.config.constants import BASE_DATA_DIR
 from src.events.parsers.parse_pass_events import parse_pass_events
@@ -69,7 +70,11 @@ if filtered_events:
                 headwidth=6,
                 ax=ax
             )
-    ax.legend(handles=PassEvent.get_legend_patches(), loc="upper right")
+
+    # === Show legend toggle ===
+    show_legend = st.checkbox("Show Legend", value=True)
+    render_event_legend(ax, PassEvent, show_legend)
+
     st.pyplot(fig)
 
     with st.expander("Show Pass Event Data"):
