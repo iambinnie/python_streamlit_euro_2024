@@ -20,6 +20,7 @@ ERRORS_DIR = os.path.join(BASE_DATA_DIR, "errors")
 MATCH_META_PATH = os.path.join(BASE_DATA_DIR, "euro24_matches.csv")
 ERROR_LOG_PATH = os.path.join(ERRORS_DIR, "download_errors.txt")
 FLATTENED_DIR = os.path.join(BASE_DATA_DIR, "flattened")
+COMBINED_EVENTS_CSV = os.path.join(BASE_DATA_DIR, "euro24_all_events_combined.csv")
 
 COMP_ID = 55     # Euro Championship
 SEASON_ID = 282  # Euro 2024
