@@ -18,6 +18,7 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 from src.events.event_models import ShotEvent
+from src.config.team_flag_mapping import TEAM_TO_FLAG_CODE
 
 def render_shared_header(title: str):
     st.markdown(f"## {title}")
@@ -80,3 +81,11 @@ def render_event_legend(ax, event_cls, show: bool = True):
             ax.legend(handles=legend_handles, loc="upper right", frameon=True)
         except Exception as e:
             print(f"Failed to render legend: {e}")
+
+
+
+# def render_team_flag(team_name: str):
+#     code = TEAM_TO_FLAG_CODE.get(team_name)
+#     if code:
+#         flag_url = f"https://flagcdn.com/64x48/{code}.png"
+#         st.image(flag_url, width=32, caption=team_name)
