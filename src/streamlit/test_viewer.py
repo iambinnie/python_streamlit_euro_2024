@@ -1,3 +1,4 @@
+# src/streamlit/test_viewer.py
 import os
 import sys
 import pandas as pd
@@ -15,6 +16,8 @@ from src.metrics.competition.passes import CompetitionPassMetrics
 from src.metrics.team.passes import TeamPassMetrics
 from src.metrics.match.passes import MatchPassMetrics
 from src.metrics.player.passes import PlayerPassMetrics
+from src.metrics.shared.filters import filter_open_play
+
 
 # ── Page config ─────────────────────────────────────────────────
 st.set_page_config(page_title="Pass Metrics — Sandbox", layout="wide")
@@ -27,13 +30,16 @@ def load_events():
 
 df = load_events()
 
+include_set_pieces = st.sidebar.checkbox("Include set pieces", value=False)
+if not include_set_pieces:
+    df = filter_open_play(df)
+
 # ── Sidebar controls ────────────────────────────────────────────
 granularity = st.sidebar.radio("Granularity", ["Competition", "Team", "Match", "Player"], index=0)
 
-# Basic guards for option lists
+# Options
 teams = sorted(df["team"].dropna().unique()) if "team" in df.columns else []
 players_all = sorted(df["player"].dropna().unique()) if "player" in df.columns else []
-matches = sorted(df["match_id"].dropna().unique()) if "match_id" in df.columns else []
 
 selected_team = None
 selected_player = None
@@ -45,15 +51,26 @@ if granularity == "Team":
     selected_player = st.sidebar.selectbox("(Optional) Player filter", ["<All>"] + player_opts) if player_opts else "<All>"
 
 elif granularity == "Match":
-    selected_match = st.sidebar.selectbox("Match ID", matches) if matches else None
-    # Optional extra filters in context of the match
-    team_opts = sorted(df.loc[df["match_id"] == selected_match, "team"].dropna().unique()) if selected_match is not None else []
-    selected_team = st.sidebar.selectbox("(Optional) Team filter", ["<All>"] + team_opts) if team_opts else "<All>"
-    if selected_team and selected_team != "<All>":
-        player_opts = sorted(df[(df["match_id"] == selected_match) & (df["team"] == selected_team)]["player"].dropna().unique())
+    # Prefer match_name if present; fallback to numeric match_id
+    if "match_name" in df.columns:
+        match_opts = sorted(df["match_name"].dropna().unique())
+        selected_match = st.sidebar.selectbox("Match", match_opts) if match_opts else None
     else:
-        player_opts = sorted(df[df["match_id"] == selected_match]["player"].dropna().unique()) if selected_match is not None else []
-    selected_player = st.sidebar.selectbox("(Optional) Player filter", ["<All>"] + player_opts) if player_opts else "<All>"
+        match_ids = sorted(df["match_id"].dropna().unique()) if "match_id" in df.columns else []
+        selected_match = st.sidebar.selectbox("Match ID", match_ids) if match_ids else None
+
+    # Optional in-match filters
+    if selected_match is not None:
+        in_match = df[df["match_name"].eq(selected_match)] if "match_name" in df.columns \
+                   else df[df["match_id"].eq(selected_match)]
+        team_opts = sorted(in_match["team"].dropna().unique()) if "team" in in_match.columns else []
+        selected_team = st.sidebar.selectbox("(Optional) Team filter", ["<All>"] + team_opts) if team_opts else "<All>"
+
+        if selected_team and selected_team != "<All>":
+            player_opts = sorted(in_match.loc[in_match["team"] == selected_team, "player"].dropna().unique())
+        else:
+            player_opts = sorted(in_match["player"].dropna().unique()) if "player" in in_match.columns else []
+        selected_player = st.sidebar.selectbox("(Optional) Player filter", ["<All>"] + player_opts) if player_opts else "<All>"
 
 elif granularity == "Player":
     selected_player = st.sidebar.selectbox("Player", players_all) if players_all else None
@@ -70,21 +87,26 @@ elif granularity == "Team" and selected_team:
     metrics = TeamPassMetrics(df, selected_team)
     scope_label = f"Team • {selected_team}"
     if selected_player and selected_player != "<All>":
-        # Re-scope metrics to that single player's rows while staying at team level
         metrics = TeamPassMetrics(df[df["player"] == selected_player], selected_team)
         scope_label += f" • Player • {selected_player}"
 
 elif granularity == "Match" and selected_match is not None:
-    # Base: match scope
-    metrics = MatchPassMetrics(df, selected_match)
-    scope_label = f"Match • {selected_match}"
-    # Optional team filter in match
+    metrics = MatchPassMetrics(df, selected_match)  # filter_by_match should accept name or id
+    scope_label = "Match • "
+    scope_label += f"{selected_match}"  # already human-readable if it's match_name
     if selected_team and selected_team != "<All>":
-        metrics = MatchPassMetrics(df[(df["match_id"] == selected_match) & (df["team"] == selected_team)], selected_match)
+        metrics = MatchPassMetrics(
+            df[(df.get("match_name", pd.Series(index=df.index)).eq(selected_match) if "match_name" in df.columns
+                else df.get("match_id", pd.Series(index=df.index)).eq(selected_match)) & (df["team"] == selected_team)],
+            selected_match,
+        )
         scope_label += f" • Team • {selected_team}"
-    # Optional player filter in match
     if selected_player and selected_player != "<All>":
-        metrics = MatchPassMetrics(df[(df["match_id"] == selected_match) & (df["player"] == selected_player)], selected_match)
+        metrics = MatchPassMetrics(
+            df[(df.get("match_name", pd.Series(index=df.index)).eq(selected_match) if "match_name" in df.columns
+                else df.get("match_id", pd.Series(index=df.index)).eq(selected_match)) & (df["player"] == selected_player)],
+            selected_match,
+        )
         scope_label += f" • Player • {selected_player}"
 
 elif granularity == "Player" and selected_player:
@@ -95,12 +117,11 @@ if metrics is None:
     st.warning("No valid selection for this granularity.")
     st.stop()
 
+# Subtitle / scope context
 st.caption(scope_label)
 
 # Helper to optionally pass player argument where supported
 def maybe_player_arg():
-    # Competition/Team/Match classes support an optional player param in many methods.
-    # Player-level class has no player argument (already scoped).
     if granularity in ("Competition", "Team", "Match"):
         if granularity == "Team" and selected_player and selected_player != "<All>":
             return selected_player
@@ -127,17 +148,21 @@ col7.metric("Passes Into Box", metrics.passes_into_box(p_arg) if p_arg is not No
 col8.metric("OP Passes Into Box", metrics.op_passes_into_box(p_arg) if p_arg is not None else metrics.op_passes_into_box())
 col9.metric("Passes Inside Box", metrics.passes_inside_box(p_arg) if p_arg is not None else metrics.passes_inside_box())
 
-st.metric("Throughballs (completed)", metrics.throughballs(p_arg) if p_arg is not None else metrics.throughballs())
+c1, c2, c3 = st.columns(3)
+c1.metric("Throughballs (attempted)", metrics.throughballs_attempted(p_arg) if p_arg is not None else metrics.throughballs_attempted())
+c2.metric("Throughballs (completed)", metrics.throughballs(p_arg) if p_arg is not None else metrics.throughballs())
+tb_pct = metrics.throughballs_completion_percentage(p_arg) if p_arg is not None else metrics.throughballs_completion_percentage()
+c3.metric("Through-ball Completion%", f"{tb_pct:.1%}")
 
 st.divider()
 
-# ── Optional top tables where they make sense ───────────────────
+# ── Optional top tables ─────────────────────────────────────────
 show_tops = st.checkbox("Show Top Passers / Assisters tables", value=(granularity in ("Competition", "Team", "Match")))
 if show_tops:
     try:
         tcol1, tcol2 = st.columns(2)
-        top_p = metrics.top_passers(n=5)
-        top_a = metrics.top_assisters(n=5)
+        top_p = metrics.top_n("player", n=5, value_name="passes")  # generic top-N by player for passes
+        top_a = metrics.top_by_bool("pass_goal_assist", true_value=True, group_column="player", n=5, value_name="assists")
         tcol1.subheader("Top Passers")
         tcol1.dataframe(top_p, use_container_width=True)
         tcol2.subheader("Top Assisters")
@@ -145,17 +170,9 @@ if show_tops:
     except Exception as e:
         st.info(f"Top tables not available for this scope: {e}")
 
+# Through-ball creators leaderboard (useful at Comp/Team/Match)
 if granularity in ("Competition", "Team", "Match"):
     st.subheader("Top Through-ball Creators")
     st.dataframe(metrics.top_throughball_creators(10), use_container_width=True)
 
-
 st.caption("This page is a sandbox for Phase-1 passing metrics. It doesn’t affect your main viewer.")
-
-# What values do we have?
-st.write(df["pass_technique"].dropna().value_counts().head(10))
-st.write(df["pass_through_ball"].dropna().value_counts())
-
-st.metric("Throughballs (attempted)", metrics.throughballs_attempted(p_arg) if p_arg is not None else metrics.throughballs_attempted())
-st.metric("Throughballs (completed)", metrics.throughballs(p_arg) if p_arg is not None else metrics.throughballs())
-

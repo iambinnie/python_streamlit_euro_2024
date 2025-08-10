@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, Any
+from typing import Optional, Any, Iterable
 import pandas as pd
+import numpy as np
 
 
 @dataclass
@@ -14,17 +15,20 @@ class BaseMetricSet:
     Parameters
     ----------
     df : pd.DataFrame
-        Raw events dataframe (can be full or pre-filtered).
+        Events dataframe (already scoped or full, depending on the wrapper).
     event_type : Optional[str]
         If provided and df has a 'type' column, rows are filtered to that event type.
     outcome_column : Optional[str]
-        Column that represents the event's outcome. For StatsBomb passes this is 'pass_outcome'
-        where NaN means 'completed'.
+        Column name for event outcome. Default success predicate uses this.
+        (e.g., passes: 'pass_outcome' where NaN means 'completed')
     """
     df: pd.DataFrame
     event_type: Optional[str] = None
     outcome_column: Optional[str] = None
 
+    # ─────────────────────────────────────────────────────────────
+    # Lifecycle
+    # ─────────────────────────────────────────────────────────────
     def __post_init__(self) -> None:
         df = self.df.copy()
 
@@ -32,65 +36,133 @@ class BaseMetricSet:
         if self.event_type and "type" in df.columns:
             df = df[df["type"] == self.event_type]
 
-        # Keep an index that's simple to work with
-        df = df.reset_index(drop=True)
-        self.df = df
+        self.df = df.reset_index(drop=True)
 
     # ─────────────────────────────────────────────────────────────
-    # Shared helpers (used by pass metrics across all granularities)
+    # Success predicate abstraction
     # ─────────────────────────────────────────────────────────────
-
-    @staticmethod
-    def _is_completed(series: pd.Series) -> pd.Series:
+    def _is_success(self, df: pd.DataFrame) -> pd.Series:
         """
-        StatsBomb convention for passes:
-        - Completed passes have NaN in 'pass_outcome'.
-        For other event families that use different coding, override in subclass if needed.
+        Generic success predicate.
+        Default: if outcome_column exists → NaN means success (StatsBomb pass-like).
+        Override in core subclasses if the event family uses different logic.
         """
-        return series.isna()
-
-    @staticmethod
-    def _is_set_piece(df: pd.DataFrame) -> pd.Series:
-        """
-        Detect set-piece passes using pass_type or play_pattern when available.
-        Falls back to 'all open play' if neither exists.
-        """
-        if "pass_type" in df.columns:
-            return df["pass_type"].isin(["Corner", "Free Kick", "Throw-in"])
-        if "play_pattern" in df.columns:
-            return df["play_pattern"].isin(["From Corner", "From Free Kick", "From Throw In"])
+        if self.outcome_column and self.outcome_column in df.columns:
+            return df[self.outcome_column].isna()
         return pd.Series(False, index=df.index)
 
+    # Convenience for pass-style completion when needed explicitly.
     @staticmethod
-    def _in_box(x: Any, y: Any) -> bool:
-        """
-        Box area per glossary: x>=102 and 18<=y<=62 (StatsBomb 120x80 pitch space).
-        Handles NaNs / bad values defensively.
-        """
-        try:
-            if pd.isna(x) or pd.isna(y):
-                return False
-            xf, yf = float(x), float(y)
-            return (xf >= 102.0) and (18.0 <= yf <= 62.0)
-        except Exception:
-            return False
+    def _is_completed(series: pd.Series) -> pd.Series:
+        return series.isna()
 
+    # ─────────────────────────────────────────────────────────────
+    # Generic selectors / math
+    # ─────────────────────────────────────────────────────────────
     @staticmethod
-    def _is_throughball_series(df: pd.DataFrame) -> pd.Series:
-        if df.empty:
-            return pd.Series(False, index=df.index)
-        mask = pd.Series(False, index=df.index)
-        if "pass_through_ball" in df.columns:
-            mask |= df["pass_through_ball"].fillna(False).astype(bool)
-        if "pass_technique" in df.columns:
-            tech = df["pass_technique"].fillna("").astype(str).str.lower().str.strip()
-            mask |= tech.str.contains(r"\bthrough[- ]?ball\b", regex=True)
+    def _and_all(df: pd.DataFrame, masks: Iterable[Optional[pd.Series]]) -> pd.Series:
+        mask = pd.Series(True, index=df.index)
+        for m in masks:
+            if m is None:
+                continue
+            # align to df index
+            m = m.reindex(df.index, fill_value=False)
+            mask &= m
         return mask
 
-    # ─────────────────────────────────────────────────────────────
-    # Generic utilities
-    # ─────────────────────────────────────────────────────────────
+    def where(self, df: pd.DataFrame, *masks: Optional[pd.Series]) -> pd.DataFrame:
+        """Return df filtered by AND of the masks."""
+        if not masks:
+            return df
+        return df[self._and_all(df, masks)]
 
+    def attempts(self, df: pd.DataFrame, *masks: Optional[pd.Series]) -> int:
+        """Count rows matching masks."""
+        return int(self.where(df, *masks).shape[0])
+
+    def successes(self, df: pd.DataFrame, *masks: Optional[pd.Series]) -> int:
+        """Count successes (using _is_success) among rows matching masks."""
+        sub = self.where(df, *masks)
+        if sub.empty:
+            return 0
+        return int(self._is_success(sub).sum())
+
+    def success_rate(self, df: pd.DataFrame, *masks: Optional[pd.Series]) -> float:
+        """Successes / Attempts for rows matching masks."""
+        att = self.attempts(df, *masks)
+        if att == 0:
+            return 0.0
+        suc = self.successes(df, *masks)
+        return suc / att
+
+    def mean_of(self, df: pd.DataFrame, col: str, *masks: Optional[pd.Series]) -> float:
+        """Mean of a column over rows matching masks."""
+        sub = self.where(df, *masks)
+        if sub.empty or col not in sub.columns:
+            return 0.0
+        return float(pd.to_numeric(sub[col], errors="coerce").mean())
+
+    def sum_of(self, df: pd.DataFrame, col: str, *masks: Optional[pd.Series]) -> float:
+        """Sum of a column over rows matching masks."""
+        sub = self.where(df, *masks)
+        if sub.empty or col not in sub.columns:
+            return 0.0
+        return float(pd.to_numeric(sub[col], errors="coerce").sum())
+
+    def per_90(self, value: float, minutes: float) -> float:
+        """Scale a value to per-90 using minutes played."""
+        if not minutes or minutes <= 0:
+            return 0.0
+        return (value / minutes) * 90.0
+
+    # ─────────────────────────────────────────────────────────────
+    # Common masks (reusable across event families)
+    # ─────────────────────────────────────────────────────────────
+    def mask_open_play(self, df: pd.DataFrame) -> pd.Series:
+        """True for open-play rows; False for set pieces when detectable."""
+        if "pass_type" in df.columns:
+            return ~df["pass_type"].isin(["Corner", "Free Kick", "Throw-in"])
+        if "play_pattern" in df.columns:
+            return ~df["play_pattern"].isin(["From Corner", "From Free Kick", "From Throw In"])
+        return pd.Series(True, index=df.index)
+
+    def mask_pressured(self, df: pd.DataFrame) -> pd.Series:
+        if "under_pressure" in df.columns:
+            return df["under_pressure"].fillna(False).astype(bool)
+        return pd.Series(False, index=df.index)
+
+    def in_box_series(self, df: pd.DataFrame, x_col: str, y_col: str) -> pd.Series:
+        """Opposition box per glossary: x>=102 and 18<=y<=62 on 120x80 pitch space."""
+        if x_col not in df.columns or y_col not in df.columns:
+            return pd.Series(False, index=df.index)
+        x = pd.to_numeric(df[x_col], errors="coerce")
+        y = pd.to_numeric(df[y_col], errors="coerce")
+        return (x >= 102) & (y >= 18) & (y <= 62)
+
+    def final_third_series(self, df: pd.DataFrame, x_col: str = "x") -> pd.Series:
+        if x_col not in df.columns:
+            return pd.Series(False, index=df.index)
+        x = pd.to_numeric(df[x_col], errors="coerce")
+        return x > 80
+
+    def pass_angle_series(
+        self,
+        df: pd.DataFrame,
+        x0: str = "x",
+        y0: str = "y",
+        x1: str = "pass_end_x",
+        y1: str = "pass_end_y",
+    ) -> pd.Series:
+        """Angle of pass vector in radians (arctan2(dy, dx))."""
+        if any(c not in df.columns for c in [x0, y0, x1, y1]):
+            return pd.Series(dtype=float, index=df.index)
+        dx = pd.to_numeric(df[x1], errors="coerce") - pd.to_numeric(df[x0], errors="coerce")
+        dy = pd.to_numeric(df[y1], errors="coerce") - pd.to_numeric(df[y0], errors="coerce")
+        return np.arctan2(dy, dx)
+
+    # ─────────────────────────────────────────────────────────────
+    # Generic "top" utilities
+    # ─────────────────────────────────────────────────────────────
     def top_n(
         self,
         group_column: str,
@@ -99,9 +171,6 @@ class BaseMetricSet:
         *,
         df: Optional[pd.DataFrame] = None,
     ) -> pd.DataFrame:
-        """
-        Return top-N frequencies for a group column.
-        """
         data = self.df if df is None else df
         if data.empty or group_column not in data.columns:
             return pd.DataFrame(columns=[group_column, value_name])
@@ -124,10 +193,6 @@ class BaseMetricSet:
         *,
         df: Optional[pd.DataFrame] = None,
     ) -> pd.DataFrame:
-        """
-        Return top-N counts by a boolean-like flag in rows.
-        Example: top assisters where `pass_goal_assist == True`.
-        """
         data = self.df if df is None else df
         if data.empty or (flag_column not in data.columns) or (group_column not in data.columns):
             return pd.DataFrame(columns=[group_column, value_name])
@@ -143,17 +208,3 @@ class BaseMetricSet:
             .reset_index(name=value_name)
         )
         return out
-
-    def action_success_rate(self, player: Optional[str] = None) -> float:
-        """
-        Generic success rate for an event family that uses an outcome column.
-        For passes (StatsBomb), NaN in outcome column means 'completed' (success).
-        """
-        if self.outcome_column is None or self.outcome_column not in self.df.columns:
-            return 0.0
-        df = self.df if player is None else self.df[self.df["player"] == player]
-        attempted = len(df)
-        if attempted == 0:
-            return 0.0
-        success = self._is_completed(df[self.outcome_column]).sum()
-        return success / attempted
