@@ -17,6 +17,8 @@ from src.metrics.team.passes import TeamPassMetrics
 from src.metrics.match.passes import MatchPassMetrics
 from src.metrics.player.passes import PlayerPassMetrics
 from src.metrics.shared.filters import filter_open_play
+from src.metrics.shared.minutes import MinutesPlayedCalculator
+
 
 
 # ── Page config ─────────────────────────────────────────────────
@@ -176,3 +178,90 @@ if granularity in ("Competition", "Team", "Match"):
     st.dataframe(metrics.top_throughball_creators(10), use_container_width=True)
 
 st.caption("This page is a sandbox for Phase-1 passing metrics. It doesn’t affect your main viewer.")
+
+st.divider()
+st.subheader("Final Third — Direction Splits")
+
+c1, c2, c3 = st.columns(3)
+c1.metric("F3 Pass Forward%", f"{(metrics.f3_pass_forward_percentage(p_arg) if p_arg is not None else metrics.f3_pass_forward_percentage()):.1%}")
+c2.metric("F3 Pass Sideways%", f"{(metrics.f3_pass_sideways_percentage(p_arg) if p_arg is not None else metrics.f3_pass_sideways_percentage()):.1%}")
+c3.metric("F3 Pass Backward%", f"{(metrics.f3_pass_backward_percentage(p_arg) if p_arg is not None else metrics.f3_pass_backward_percentage()):.1%}")
+
+c4, c5 = st.columns(2)
+c4.metric("Final Third Passes (completed)", metrics.final_third_passes(p_arg) if p_arg is not None else metrics.final_third_passes())
+c5.metric("OP Final Third Passes (completed)", metrics.op_final_third_passes(p_arg) if p_arg is not None else metrics.op_final_third_passes())
+
+st.subheader("Whole Pitch — Direction Splits")
+d1, d2, d3 = st.columns(3)
+d1.metric("Pass Forward%", f"{(metrics.pass_forward_percentage(p_arg) if p_arg is not None else metrics.pass_forward_percentage()):.1%}")
+d2.metric("Pass Sideways%", f"{(metrics.pass_sideways_percentage(p_arg) if p_arg is not None else metrics.pass_sideways_percentage()):.1%}")
+d3.metric("Pass Backward%", f"{(metrics.pass_backward_percentage(p_arg) if p_arg is not None else metrics.pass_backward_percentage()):.1%}")
+
+sp_mask = (~metrics.mask_open_play(metrics.df))  # True where set piece
+total = len(metrics.df)
+sp = int(sp_mask.sum())
+op = total - sp
+st.caption(f"Event mix in scope — Open play: {op}  |  Set pieces: {sp}  |  Total: {total}")
+
+st.divider()
+st.subheader("Pressure — Passing")
+
+p1, p2, p3 = st.columns(3)
+p1.metric("Passes Pressured%", f"{(metrics.passes_pressured_percentage(p_arg) if p_arg is not None else metrics.passes_pressured_percentage()):.1%}")
+p2.metric("Pr. Pass%", f"{(metrics.pressured_pass_percentage(p_arg) if p_arg is not None else metrics.pressured_pass_percentage()):.1%}")
+p3.metric("Pr. Pass% Dif.", f"{(metrics.pressured_pass_percent_difference(p_arg) if p_arg is not None else metrics.pressured_pass_percent_difference()):.1%}")
+
+q1, q2, q3 = st.columns(3)
+q1.metric("Pr. Pass Length (avg)", f"{(metrics.pressured_pass_length(p_arg) if p_arg is not None else metrics.pressured_pass_length()):.2f}")
+q2.metric("Succ. Pr. Pass Length (avg)", f"{(metrics.successful_pressured_pass_length(p_arg) if p_arg is not None else metrics.successful_pressured_pass_length()):.2f}")
+q3.metric("Pr. Pass Length Dif.", f"{(metrics.pressured_pass_length_difference(p_arg) if p_arg is not None else metrics.pressured_pass_length_difference()):+.2f}")
+
+
+st.subheader("Box Passing — Attempted / Completed / %")
+
+bx1, bx2, bx3 = st.columns(3)
+bx1.metric("Into Box — Attempted", metrics.passes_into_box_attempted(p_arg) if p_arg is not None else metrics.passes_into_box_attempted())
+bx2.metric("Into Box — Completed", metrics.passes_into_box_completed(p_arg) if p_arg is not None else metrics.passes_into_box_completed())
+bx3.metric("Into Box — Completion%", f"{(metrics.passes_into_box_completion_percentage(p_arg) if p_arg is not None else metrics.passes_into_box_completion_percentage()):.1%}")
+
+ib1, ib2, ib3 = st.columns(3)
+ib1.metric("Inside Box — Attempted", metrics.passes_inside_box_attempted(p_arg) if p_arg is not None else metrics.passes_inside_box_attempted())
+ib2.metric("Inside Box — Completed", metrics.passes_inside_box_completed(p_arg) if p_arg is not None else metrics.passes_inside_box_completed())
+ib3.metric("Inside Box — Completion%", f"{(metrics.passes_inside_box_completion_percentage(p_arg) if p_arg is not None else metrics.passes_inside_box_completion_percentage()):.1%}")
+
+# If set pieces are included globally, you can also show OP variants for Into Box:
+# bx1.metric("OP Into Box — Attempted", ...)
+# ...
+
+st.subheader("Deep Progressions (Pass-only) — Attempted / Completed / %")
+
+dp1, dp2, dp3 = st.columns(3)
+dp1.metric("DP — Attempted", metrics.pass_deep_progressions_attempted(p_arg) if p_arg is not None else metrics.pass_deep_progressions_attempted())
+dp2.metric("DP — Completed", metrics.pass_deep_progressions(p_arg) if p_arg is not None else metrics.pass_deep_progressions())
+dp3.metric("DP — Completion%", f"{(metrics.pass_deep_progressions_completion_percentage(p_arg) if p_arg is not None else metrics.pass_deep_progressions_completion_percentage()):.1%}")
+
+if granularity in ("Competition", "Team", "Match"):
+    st.subheader("Top Deep Progressors (Pass-only)")
+    st.dataframe(metrics.top_pass_deep_progressors(10), use_container_width=True)
+
+# Compute minutes for the current scoped df and attach to metrics
+mpc = MinutesPlayedCalculator()
+minutes_map = mpc.compute(df)     # df here should match the current scope
+metrics.set_minutes_map(minutes_map)
+
+# ---- Per-90 quick test block (show only when a player is selected) ----
+if (granularity == "Player" and selected_player) or (
+    granularity in ("Team", "Match") and selected_player and selected_player != "<All>"
+):
+    player_name = selected_player if selected_player and selected_player != "<All>" else selected_player
+
+    st.subheader("Per-90 (Player)")
+    r1, r2, r3 = st.columns(3)
+    r1.metric("OP F3 Passes /90", f"{metrics.op_final_third_passes_per90(player_name):.2f}")
+    r2.metric("Into Box (completed) /90", f"{metrics.passes_into_box_completed_per90(player_name):.2f}")
+    r3.metric("Through-balls (completed) /90", f"{metrics.throughballs_per90(player_name):.2f}")
+
+    r4, r5, r6 = st.columns(3)
+    r4.metric("Passes Inside Box (completed) /90", f"{metrics.passes_inside_box_completed_per90(player_name):.2f}")
+    r5.metric("Deep Progressions (attempted) /90", f"{metrics.op_pass_deep_progressions_attempted_per90(player_name):.2f}")
+    r6.metric("Deep Progressions (completed) /90", f"{metrics.op_pass_deep_progressions_per90(player_name):.2f}")

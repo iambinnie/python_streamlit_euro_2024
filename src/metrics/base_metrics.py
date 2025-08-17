@@ -37,6 +37,8 @@ class BaseMetricSet:
             df = df[df["type"] == self.event_type]
 
         self.df = df.reset_index(drop=True)
+        self._minutes_map: dict[str, float] = {}
+
 
     # ─────────────────────────────────────────────────────────────
     # Success predicate abstraction
@@ -208,3 +210,19 @@ class BaseMetricSet:
             .reset_index(name=value_name)
         )
         return out
+
+    def set_minutes_map(self, minutes: dict[str, float]) -> None:
+        """Attach a {player: minutes_played} map to this metric set."""
+        self._minutes_map = minutes or {}
+
+    def minutes_for(self, player: str | None) -> float:
+        if not player:
+            return 0.0
+        return float(self._minutes_map.get(player, 0.0))
+
+    def per_90(self, value: float, player: Optional[str]) -> float:
+        """Scale a player-valued metric to per-90 using stored minutes."""
+        mins = self.minutes_for(player)
+        if mins <= 0:
+            return 0.0
+        return (value / mins) * 90.0
