@@ -39,6 +39,7 @@ def load_pass_events(path: str):
 pass_events_dict = load_pass_events(DATA_PATH)
 pass_events = list(pass_events_dict.values())
 
+
 render_shared_header("Euro 2024 – Pass Viewer")
 
 # Shared filters (hierarchical)

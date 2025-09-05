@@ -5,11 +5,15 @@ Shared UI components for Streamlit event viewers:
 """
 import os
 import sys
+import json
 
+import requests
 import streamlit as st
 import pandas as pd
 import matplotlib.patches as mpatches
 from matplotlib import pyplot as plt
+from streamlit_lottie import st_lottie
+
 
 # Determine and add the project root (only once)
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -20,9 +24,37 @@ if PROJECT_ROOT not in sys.path:
 from src.events.event_models import ShotEvent
 from src.config.team_flag_mapping import TEAM_TO_FLAG_CODE
 
+from streamlit_lottie import st_lottie
+
+# url = requests.get(
+#     "https://lottie.host/30ac122f-10ac-4a0d-a7fc-40d5e0a92211/W5cJlZxUAo.lottie")
+# # Creating a blank dictionary to store JSON file,
+# # as their structure is similar to Python Dictionary
+# url_json = dict()
+#
+# if url.status_code == 200:
+#     url_json = url.json()
+# else:
+#     print("Error in the URL")
+#
+#
+# st.title("Adding Lottie Animation in Streamlit WebApp")
+#
+# st_lottie(url_json)
+
+path = "/Users/john.binnie/PycharmProjects/CPD/python_streamlit_euro_2024/src/images/Euro 2024 Logo Loop.json"
+with open(path,"r", errors='ignore') as file:
+    url = json.load(file)
+
+st.title("Adding Lottie Animation in Streamlit WebApp")
+
+st_lottie(url)
+
+
 def render_shared_header(title: str):
     st.markdown(f"## {title}")
     st.markdown("---")
+    st.logo("src/images/euro_24_logo.png", size = "large")
 
 
 def shared_filters(df: pd.DataFrame, enable_player_toggle: bool = True):
